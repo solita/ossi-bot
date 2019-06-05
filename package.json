@@ -1,0 +1,54 @@
+{
+  "name": "os-contribution-slack-bot",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/talk-handler.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serverless": "serverless",
+    "lint": "tslint --fix \"src/**/*.ts\" --project tsconfig.json",
+    "test:unit": "jest src",
+    "test:integration": "jest integration-tests"
+  },
+  "author": "Juho Friman <juho.friman@solita.fi>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^24.0.13",
+    "jest": "^24.8.0",
+    "serverless": "^1.41.1",
+    "serverless-plugin-typescript": "^1.1.7",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "serverless-offline": "^5.0.1"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/out/",
+      "/integration/types/",
+      "/.build/"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "."
+    ],
+    "collectCoverage": true,
+    "coverageReporters": [
+      "lcov",
+      "text",
+      "html"
+    ]
+  }
+}

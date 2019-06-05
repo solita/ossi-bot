@@ -1,0 +1,27 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "target": "es2016",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "skipLibCheck": true,
+
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "outDir": "out/"
+    },
+    "include": [
+        "src/**/*.ts",
+        "types/**/*.d.ts"
+    ]
+}
