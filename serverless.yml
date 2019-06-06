@@ -26,22 +26,18 @@ provider:
   region: eu-north-1
   environment:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+    SLACK_TOKEN: ${env:SLACK_TOKEN}
 
 # you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/os-contributions"
 
 # you can define service wide environment variables here
 #  environment:
@@ -57,6 +53,14 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
+
+  dynamo:
+    handler: src/dynamo-frontdoor.query
+    events:
+      - http:
+          path: query
+          method: get
+
   talk:
     handler: src/talk-handler.talk
     events:
@@ -68,6 +72,13 @@ functions:
     events:
       - http:
           path: help
+          method: post
+
+  change-state:
+    handler: src/change-state-handler.changeState
+    events:
+      - http:
+          path: state
           method: post
 
 #    The following are a few example events you can configure
@@ -105,12 +116,37 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
+resources:
+  Resources:
+    ContributionsTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+          -
+            AttributeName: sequence
+            AttributeType: N
+#          -
+#            AttributeName: text
+#            AttributeType: S
+#          -
+#            AttributeName: status
+#            AttributeType: S
+
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+          -
+            AttributeName: sequence
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: os-contributions
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"

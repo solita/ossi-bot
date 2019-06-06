@@ -1,12 +1,9 @@
 'use strict';
 
-import { verifySignature, getSecret } from "./slack-auth";
+import { authLambdaEvent} from "./slack-auth";
 
 export const help = (event: any) => {
-    if(!verifySignature(
-        event.headers['X-Slack-Signature'],
-        getSecret(),
-        `v0:${event.headers['X-Slack-Request-Timestamp']}:${event.body}`)) {
+    if(!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
             body: 'Invalid signature'

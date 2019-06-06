@@ -1,4 +1,4 @@
-import * as CryptoJS from 'crypto-js';
+import * as CryptoJS from 'crypto-js';
 
 export const calculateSignature = (secret: string, payload: string): string => {
     return `v0=${CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)}`;
@@ -10,4 +10,11 @@ export const verifySignature = (expected: string, secret: string, payload: strin
 
 export const getSecret = () => {
     return process.env.SLACK_SIGNING_SECRET;
+};
+
+export const authLambdaEvent = (event: any): boolean => {
+    return verifySignature(
+        event.headers['X-Slack-Signature'],
+        getSecret(),
+        `v0:${event.headers['X-Slack-Request-Timestamp']}:${event.body}`);
 };
