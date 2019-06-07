@@ -61,17 +61,17 @@ functions:
           path: query
           method: get
 
-  talk:
-    handler: src/talk-handler.talk
+  event:
+    handler: src/event-handler.handleEvent
     events:
       - http:
-          path: talk
+          path: event
           method: post
-  help:
-    handler: src/help-handler.help
+  slash:
+    handler: src/slash-command-handler.handleSlashCommand
     events:
       - http:
-          path: help
+          path: slash
           method: post
 
   change-state:

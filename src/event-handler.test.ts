@@ -1,4 +1,5 @@
-import { talk } from './talk-handler';
+require('./test-utils');
+import { handleEvent } from './event-handler';
 const auth = require('./slack-auth');
 
 const testEvent = (body: any) => {
@@ -11,15 +12,14 @@ const testEvent = (body: any) => {
     };
 };
 
-describe('help-handler.ts', () => {
+
+describe('event-handler.ts', () => {
 
     it('Should return 401 when authentication fails', async () => {
         auth.verifySignature = jest.fn(() => false);
         auth.getSecret = jest.fn(() => 'secret');
-        await expect(talk(testEvent({ }))).resolves.toMatchObject({
-            statusCode: 401,
-            body: expect.any(String)
-        });
+        await expect(handleEvent(testEvent({ })))
+            .resolves.lambdaResponseWithStatusAndBodyContaining(401,{message: 'Invalid signature'});
         expect(auth.verifySignature)
             .toBeCalledWith(
                 'v0=stub-signature',
@@ -27,18 +27,11 @@ describe('help-handler.ts', () => {
                 'v0:12345:{}');
     });
 
-    xit('Should return 200 OK when event contains challenge', async () => {
+    it('Should return 200 OK with given challenge when received event contains challenge', () => {
         auth.verifySignature = jest.fn(() => true);
         auth.getSecret = jest.fn(() => 'secret');
-        await expect(talk(testEvent({ challenge: 'hiholetsqo' }))).resolves.toMatchObject({
-            statusCode: 200,
-            body: 'hiholetsgo'
-        });
-        expect(auth.verifySignature)
-            .toBeCalledWith(
-                'v0=stub-signature',
-                'secret',
-                'v0:12345:{}');
+        return expect(handleEvent(testEvent({ challenge: 'hiholetsgo' })))
+            .resolves.lambdaResponseWithStatusAndBodyContaining(200, { challenge: "hiholetsgo" });
     });
 
 

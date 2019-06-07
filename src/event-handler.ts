@@ -5,11 +5,11 @@ import axios from 'axios';
 import {writeContribution} from './dynamo';
 
 
-export const talk = (event: any) => {
+export const handleEvent = (event: any) => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
-            body: 'Invalid signature'
+            body: JSON.stringify({message: 'Invalid signature'})
         })
     }
     const body = JSON.parse(event.body);

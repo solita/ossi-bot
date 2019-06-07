@@ -35,8 +35,8 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'small') {
-        return updateState(id, seq, 'SMALL')
+    if(interaction.actions[0].value === 'medium') {
+        return updateState(id, seq, 'MEDIUM')
             .then(_ => {
                 return {
                     statusCode: 200,

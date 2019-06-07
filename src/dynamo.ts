@@ -26,7 +26,7 @@ export const deleteEntry = (id: string, seq: string) => {
 };
 
 export const updateState = (id: string, seq: string,
-                            state: 'PENDING' | 'LARGE' | 'SMALL' | 'NO' |
+                            state: 'PENDING' | 'LARGE' | 'MEDIUM' | 'NO' |
                                 'ACCEPTED_LARGE' | 'ACCEPTED_SMALL') => {
     var params = {
         TableName: 'os-contributions',
@@ -34,10 +34,10 @@ export const updateState = (id: string, seq: string,
             id: id,
             sequence: parseInt(seq)
         },
-        ExpressionAttributeNames: {'#state' : 'state'},
-        UpdateExpression: 'set #state = :state',
+        ExpressionAttributeNames: {'#status' : 'status'},
+        UpdateExpression: 'set #status = :status',
         ExpressionAttributeValues: {
-            ':state': state
+            ':status': state
         }
     };
     return ddb.update(params).promise();

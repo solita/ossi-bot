@@ -2,7 +2,7 @@
   "name": "os-contribution-slack-bot",
   "version": "0.0.1",
   "description": "",
-  "main": "src/talk-handler.ts",
+  "main": "src/event-handler.ts",
   "scripts": {
     "serverless": "serverless",
     "lint": "tslint --fix \"src/**/*.ts\" --project tsconfig.json",
