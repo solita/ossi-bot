@@ -46,6 +46,28 @@ export const changeState = (event: any) => {
                 }
             });
     }
+    if(interaction.actions[0].value === 'accepted') {
+        return updateState(id, seq, 'ACCEPTED')
+            .then(_ => {
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        text: 'Accepted this contribution'
+                    })
+                }
+            });
+    }
+    if(interaction.actions[0].value === 'declined') {
+        return updateState(id, seq, 'DECLINED')
+            .then(_ => {
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        text: 'Declined this contribution'
+                    })
+                }
+            });
+    }
     if(interaction.actions[0].value === 'no') {
         return updateState(id, seq, 'NO')
             .then(_ => {

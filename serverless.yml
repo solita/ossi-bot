@@ -37,6 +37,10 @@ provider:
         - dynamodb:Query
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/os-contributions"
 
 # you can define service wide environment variables here
@@ -80,6 +84,14 @@ functions:
       - http:
           path: state
           method: post
+
+  streamFunction:
+    handler: src/status-changes-handler.handleStream
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [ ContributionsTable, StreamArn ]
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
@@ -147,6 +159,8 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: os-contributions
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"

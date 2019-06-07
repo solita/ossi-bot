@@ -27,7 +27,7 @@ export const deleteEntry = (id: string, seq: string) => {
 
 export const updateState = (id: string, seq: string,
                             state: 'PENDING' | 'LARGE' | 'MEDIUM' | 'NO' |
-                                'ACCEPTED_LARGE' | 'ACCEPTED_SMALL') => {
+                                'ACCEPTED' | 'DECLINED') => {
     var params = {
         TableName: 'os-contributions',
         Key: {
