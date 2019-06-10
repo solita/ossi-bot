@@ -61,7 +61,7 @@ export const getNewSequenceId = (id: string): Promise<any> => {
     });
 };
 
-export const writeContribution = async (id: string, text: string): Promise<any> => {
+export const writeContribution = async (id: string, text: string, privateChannel: string): Promise<any> => {
     const seqId = await getNewSequenceId(id);
     const userInfo = await axios.get(`https://slack.com/api/users.info?user=${id}`,
         {
@@ -77,7 +77,8 @@ export const writeContribution = async (id: string, text: string): Promise<any> 
             'sequence' : seqId,
             'text' : text,
             'username': userInfo.data.user.real_name,
-            'status': 'PENDING'
+            'status': 'PENDING',
+            'privateChannel': privateChannel
         }
     };
     return ddb.put(params).promise().then(_ => `${id}-${seqId}`);

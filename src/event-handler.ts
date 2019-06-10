@@ -27,10 +27,10 @@ export const handleEvent = (event: any) => {
             return Promise.resolve({statusCode: 200});
         }
         if (body.event.text) {
-            writeContribution(body.event.user, body.event.text).then((eventId) => {
+            writeContribution(body.event.user, body.event.text, body.event.channel).then((eventId) => {
                 return axios.post('https://slack.com/api/chat.postMessage',
                     {
-                        text: `Hi there! I received a contribution from you?`,
+                        text: `Hi there! Did I received a contribution from you? Do you want me to submit this one?`,
                         attachments: [
                             {
                                 text: `${body.event.text}...`,
