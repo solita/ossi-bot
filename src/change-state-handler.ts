@@ -30,7 +30,7 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: 'Nice! Big buck incoming - Valtteri will gert back to you'
+                        text: 'Marked this contribution to be a large one (this is currently not supported)'
                     })
                 }
             });
@@ -41,7 +41,18 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: 'Ok, small fee is a small fee'
+                        text: "Marked your contribution to be medium. I will get back to you, when your contribution gets processed."
+                    })
+                }
+            });
+    }
+    if(interaction.actions[0].value === 'small') {
+        return updateState(id, seq, 'SMALL')
+            .then(_ => {
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        text: "Marked your contribution to be small. I will get back to you, when your contribution gets processed."
                     })
                 }
             });
@@ -74,7 +85,7 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: 'Good to know, that you are up tp something. OSSI appreciates.'
+                        text: 'Good to know, that you are up to something. Ossitron-2000 appreciates.'
                     })
                 }
             });

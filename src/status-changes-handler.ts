@@ -3,7 +3,7 @@ import axios from "axios";
 const sendNotification = (data: any) => {
     return axios.post('https://slack.com/api/chat.postMessage',
         {
-            text: `Hi there! I received a new open source contribution submission by ${data.username.S}!`,
+            text: `Hi! I received a new open source contribution submission by ${data.username.S}!`,
             attachments: [
                 {
                     fallback: 'fallback',
@@ -27,19 +27,21 @@ const sendNotification = (data: any) => {
                             name: "STATE",
                             text: "Accept",
                             type: "button",
-                            value: "accepted"
+                            value: "accepted",
+                            style: "primary"
                         },
                         {
                             name: "STATE",
                             text: "decline",
                             type: "button",
-                            value: "declined"
+                            value: "declined",
+                            style: "danger"
                         }
                     ]
                 }
 
             ],
-            channel: "#random"
+            channel: process.env.MANAGEMENT_CHANNEL
         },
         {
             headers: {
@@ -85,6 +87,7 @@ const sendResult = (data: any) => {
 };
 
 export const handleStream = async (event: any) => {
+    console.log(JSON.stringify(event, null, 2));
 
     const payloads = [] as any[];
     event.Records.forEach((item: any) => {
