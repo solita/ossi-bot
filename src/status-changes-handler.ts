@@ -1,4 +1,5 @@
 import axios from "axios";
+import {Config} from "./shared/config";
 
 const sendNotification = (data: any) => {
     return axios.post('https://slack.com/api/chat.postMessage',
@@ -46,12 +47,12 @@ const sendNotification = (data: any) => {
                 }
 
             ],
-            channel: process.env.MANAGEMENT_CHANNEL
+            channel: Config.get('MANAGEMENT_CHANNEL')
         },
         {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
             }
         });
 };
@@ -101,7 +102,7 @@ const sendResult = (data: any) => {
         {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
             }
         });
 };

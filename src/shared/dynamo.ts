@@ -1,5 +1,6 @@
 import { DynamoDB } from 'aws-sdk';
 import axios from "axios";
+import {Config} from "./config";
 
 const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
@@ -99,7 +100,7 @@ export const writeContribution = async (id: string, text: string, privateChannel
     const userInfo = await axios.get(`https://slack.com/api/users.info?user=${id}`,
         {
             headers: {
-                "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
             }
         });
 

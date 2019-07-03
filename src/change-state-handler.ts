@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent} from "./slack-auth";
-import {deleteEntry, updateState, updateSize, getContribution} from "./dynamo";
+import {deleteEntry, updateState, updateSize, getContribution} from "./shared/dynamo";
 const { parse } = require('querystring');
 
 export const changeState = (event: any) => {

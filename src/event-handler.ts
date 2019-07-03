@@ -2,7 +2,8 @@
 
 import {authLambdaEvent} from "./slack-auth";
 import axios from 'axios';
-import {writeContribution} from './dynamo';
+import {writeContribution} from './shared/dynamo';
+import {Config} from "./shared/config";
 
 
 export const handleEvent = (event: any) => {
@@ -37,7 +38,7 @@ export const handleEvent = (event: any) => {
                 }, {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                        "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
                     }
                 }).then(r => resolve({statusCode: 200}));
             } else {
@@ -90,7 +91,7 @@ export const handleEvent = (event: any) => {
                         {
                             headers: {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
                             }
                         });
                 }).catch(err => {
@@ -102,7 +103,7 @@ export const handleEvent = (event: any) => {
                         {
                             headers: {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
                             }
                         });
                 }).then(r => resolve({statusCode: 200}))

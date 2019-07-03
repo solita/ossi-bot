@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent} from "./slack-auth";
-import { deleteEntry, getContributions } from "./dynamo";
+import { deleteEntry, getContributions } from "./shared/dynamo";
 const { parse } = require('querystring');
 
 export const handleSlashCommand = (event: any) => {

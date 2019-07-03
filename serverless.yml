@@ -59,13 +59,6 @@ provider:
 
 functions:
 
-  dynamo:
-    handler: src/dynamo-frontdoor.query
-    events:
-      - http:
-          path: query
-          method: get
-
   event:
     handler: src/event-handler.handleEvent
     events:

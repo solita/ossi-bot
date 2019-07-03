@@ -1,4 +1,5 @@
 import * as CryptoJS from 'crypto-js';
+import {Config} from "./shared/config";
 
 export const calculateSignature = (secret: string, payload: string): string => {
     return `v0=${CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)}`;
@@ -9,7 +10,7 @@ export const verifySignature = (expected: string, secret: string, payload: strin
 };
 
 export const getSecret = () => {
-    return process.env.SLACK_SIGNING_SECRET;
+    return Config.get("SLACK_SIGNING_SECRET");
 };
 
 export const authLambdaEvent = (event: any): boolean => {
