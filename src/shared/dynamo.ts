@@ -1,7 +1,7 @@
 import { DynamoDB } from 'aws-sdk';
 import axios from "axios";
 import {Config} from "./config";
-import {Contribution} from "./model";
+import {Contribution, Status, Size} from "./model";
 
 const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
@@ -45,7 +45,7 @@ export const deleteEntry = (id: string, seq: string) => {
 };
 
 export const updateState = (id: string, seq: string,
-                            state: 'INITIAL' | 'PENDING' | 'ACCEPTED' | 'DECLINED') => {
+                            state: Status) => {
     var params = {
         TableName: 'ossi-contributions',
         Key: {
@@ -62,7 +62,7 @@ export const updateState = (id: string, seq: string,
 };
 
 export const updateSize = (id: string, seq: string,
-                               size: 'LARGE' | 'MEDIUM' | 'SMALL' | 'NO' ) => {
+                               size: Size ) => {
     var params = {
         TableName: 'ossi-contributions',
         Key: {

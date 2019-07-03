@@ -64,13 +64,13 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'no') {
-        return updateSize(id, seq, 'NO')
+    if(interaction.actions[0].value === 'competence_development') {
+        return updateSize(id, seq, 'COMPETENCE_DEVELOPMENT')
             .then(_ => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: 'Good to know, that you are up to something. Ossitron-2000 appreciates.'
+                        text: 'Good to know that you use competence development hours for Open Source work.'
                     })
                 }
             });
@@ -104,6 +104,14 @@ export const changeState = (event: any) => {
                             ]
                         })
                     }
+                })
+                .catch(() => {
+                    return {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            text: 'This contribution was deleted. This means that contributor has called rollback for the contribution. No message was sent to contributor.'
+                        })
+                    }
                 });
         });
 
@@ -135,6 +143,14 @@ export const changeState = (event: any) => {
                                     ]
                                 }
                             ]
+                        })
+                    }
+                })
+                .catch(() => {
+                    return {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            text: 'This contribution was deleted. This means that contributor has called rollback for the contribution. No message was sent to contributor.'
                         })
                     }
                 });
