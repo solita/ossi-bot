@@ -1,10 +1,11 @@
 import { DynamoDB } from 'aws-sdk';
 import axios from "axios";
 import {Config} from "./config";
+import {Contribution} from "./model";
 
 const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
-export const getContributions = (id: string) => {
+export const getContributions = (id: string): Promise<Contribution[]> => {
     var params = {
         TableName: 'ossi-contributions',
         ExpressionAttributeValues: {
@@ -12,7 +13,8 @@ export const getContributions = (id: string) => {
         },
         KeyConditionExpression: 'id = :id',
     };
-    return ddb.query(params).promise();
+    return ddb.query(params).promise()
+        .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
 };
 
 export const getContribution = (id: string, seq: string) => {
