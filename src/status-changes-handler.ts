@@ -1,110 +1,93 @@
-import axios from "axios";
 import {Config} from "./shared/config";
+import {postMessage} from "./shared/slack-interaction";
 
-const sendNotification = (data: any) => {
-    return axios.post('https://slack.com/api/chat.postMessage',
-        {
-            text: `Hi! I received a new open source contribution submission by ${data.username.S}!`,
-            attachments: [
-                {
-                    fallback: 'fallback',
-                    color: "#ffff00",
-                    callback_id: `${data.id.S}-${data.sequence.N}`,
-                    text: data.text.S,
-                    fields: [
-                        {
-                            title: "Size",
-                            value: data.size.S,
-                            short: true
-                        },
-                        {
-                            title: "Status",
-                            value: data.status.S,
-                            short: true
-                        },
-                        {
-                            title: "Rollback ID",
-                            value: `${data.id.S}-${data.sequence.N}`,
-                            short: true
-                        }
-                    ],
-                    actions: [
-                        {
-                            name: "STATE",
-                            text: "Accept",
-                            type: "button",
-                            value: "accepted",
-                            style: "primary"
-                        },
-                        {
-                            name: "STATE",
-                            text: "decline",
-                            type: "button",
-                            value: "declined",
-                            style: "danger"
-                        }
-                    ]
-                }
-
-            ],
-            channel: Config.get('MANAGEMENT_CHANNEL')
-        },
-        {
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+const sendNotificationToManagementChannel = (data: any) => {
+    return postMessage(
+        Config.get('MANAGEMENT_CHANNEL'),
+        `Hi! I received a new open source contribution submission by ${data.username.S}!`,
+        [
+            {
+                fallback: 'fallback',
+                color: "#ffff00",
+                callback_id: `${data.id.S}-${data.sequence.N}`,
+                text: data.text.S,
+                fields: [
+                    {
+                        title: "Size",
+                        value: data.size.S,
+                        short: true
+                    },
+                    {
+                        title: "Status",
+                        value: data.status.S,
+                        short: true
+                    },
+                    {
+                        title: "Rollback ID",
+                        value: `${data.id.S}-${data.sequence.N}`,
+                        short: true
+                    }
+                ],
+                actions: [
+                    {
+                        name: "STATE",
+                        text: "Accept",
+                        type: "button",
+                        value: "accepted",
+                        style: "primary"
+                    },
+                    {
+                        name: "STATE",
+                        text: "decline",
+                        type: "button",
+                        value: "declined",
+                        style: "danger"
+                    }
+                ]
             }
-        });
+
+        ]);
 };
 
 const sendResult = (data: any) => {
-    return axios.post('https://slack.com/api/chat.postMessage',
-        {
-            text: `Your contribution got processed!`,
-            attachments: [
-                {
-                    fallback: 'fallback',
-                    color: (function(status) {
-                        if(status === 'PENDING') {
-                            return "#ffff00";
-                        }
-                        if(status === 'ACCEPTED') {
-                            return "#36a64f";
-                        }
-                        if(status === 'DECLINED') {
-                            return "#ff0000";
-                        }
-                    })(data.status.S),
-                    callback_id: `${data.id.S}-${data.sequence.N}`,
-                    text: data.text.S,
-                    fields: [
-                        {
-                            title: "Size",
-                            value: data.size.S,
-                            short: true
-                        },
-                        {
-                            title: "Status",
-                            value: data.status.S,
-                            short: true
-                        },
-                        {
-                            title: "Rollback ID",
-                            value: `${data.id.S}-${data.sequence.N}`,
-                            short: true
-                        }
-                    ]
-                }
-
-            ],
-            channel: data.privateChannel.S
-        },
-        {
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+    return postMessage(
+        data.privateChannel.S,
+        `Your contribution got processed!`,
+        [
+            {
+                fallback: 'fallback',
+                color: (function(status) {
+                    if(status === 'PENDING') {
+                        return "#ffff00";
+                    }
+                    if(status === 'ACCEPTED') {
+                        return "#36a64f";
+                    }
+                    if(status === 'DECLINED') {
+                        return "#ff0000";
+                    }
+                })(data.status.S),
+                callback_id: `${data.id.S}-${data.sequence.N}`,
+                text: data.text.S,
+                fields: [
+                    {
+                        title: "Size",
+                        value: data.size.S,
+                        short: true
+                    },
+                    {
+                        title: "Status",
+                        value: data.status.S,
+                        short: true
+                    },
+                    {
+                        title: "Rollback ID",
+                        value: `${data.id.S}-${data.sequence.N}`,
+                        short: true
+                    }
+                ]
             }
-        });
+        ]);
 };
 
 export const handleStream = async (event: any) => {
@@ -118,7 +101,7 @@ export const handleStream = async (event: any) => {
     const newImage = event.Records[0].dynamodb.NewImage;
 
     if (newImage.status.S === 'PENDING') {
-        return sendNotification(newImage)
+        return sendNotificationToManagementChannel(newImage)
             .then(() => {
                 console.log('Sent notification');
                 return {message: 'OK'};

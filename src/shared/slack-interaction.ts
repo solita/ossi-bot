@@ -1,8 +1,23 @@
 import {deleteEntry, getContributions} from "./dynamo";
+import axios from "axios";
+import {Config} from "./config";
 
 export type LambdaResponse = {
     statusCode: number,
     body: string
+}
+
+export function postMessage(channel: string, message: string, attachments: any = []): Promise<any> {
+    return axios.post('https://slack.com/api/chat.postMessage', {
+        text: message,
+        channel: channel,
+        attachments: attachments
+    }, {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+        }
+    }).then(() => ({statusCode: 200}));
 }
 
 /**
@@ -33,6 +48,11 @@ export function rollbackContribution(rollbackId: string): Promise<LambdaResponse
         })
 }
 
+/**
+ * Lists users contributions.
+ *
+ * @param userId
+ */
 export function listContributions(userId: string): Promise<LambdaResponse> {
     return getContributions(userId).then((results) => {
         const response = {
@@ -81,6 +101,9 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     });
 }
 
+/**
+ * Replies with help text
+ */
 export function replyWithHelp(): Promise<LambdaResponse> {
     const helpMessage = [
         "*Hi there!*",

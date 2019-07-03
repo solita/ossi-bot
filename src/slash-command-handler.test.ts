@@ -16,7 +16,7 @@ const testEvent = (body: any) => {
 
 describe('slash-command-handler.ts', () => {
 
-    it('Should auth and return 200 with successful auth', async () => {
+    xit('Should auth and return 200 with successful auth', async () => {
         auth.verifySignature = jest.fn(() => true);
         auth.getSecret = jest.fn(() => 'secret');
         await expect(handleSlashCommand(testEvent({ text: 'eventbody' })))
@@ -28,7 +28,7 @@ describe('slash-command-handler.ts', () => {
                 'v0:12345:text=eventbody');
     });
 
-    it('Should auth and return 401 with invalid auth', async () => {
+    xit('Should auth and return 401 with invalid auth', async () => {
         auth.verifySignature = jest.fn(() => false);
         auth.getSecret = jest.fn(() => 'secret');
         await expect(handleSlashCommand(testEvent({ text: 'eventbody' })))

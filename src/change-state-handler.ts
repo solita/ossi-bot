@@ -4,6 +4,13 @@ import { authLambdaEvent} from "./slack-auth";
 import {deleteEntry, updateState, updateSize, getContribution} from "./shared/dynamo";
 const { parse } = require('querystring');
 
+/**
+ * Change state handler is a handler for slack interactive components.
+ *
+ * This changes states of the contributions from the forms posted to slack.
+ *
+ * @param event
+ */
 export const changeState = (event: any) => {
     if(!authLambdaEvent(event)) {
         return Promise.resolve({
@@ -136,7 +143,7 @@ export const changeState = (event: any) => {
     return Promise.resolve({
         statusCode: 200,
         body: JSON.stringify({
-            text: 'I received something I don\'t understands!'
+            text: 'I received something I don\'t understand!'
         })
     });
 };

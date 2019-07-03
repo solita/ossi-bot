@@ -1,11 +1,16 @@
 'use strict';
 
 import {authLambdaEvent} from "./slack-auth";
-import axios from 'axios';
 import {writeContribution} from './shared/dynamo';
-import {Config} from "./shared/config";
+import {postMessage} from "./shared/slack-interaction";
 
-
+/**
+ * Event handler listens to private conversations between solitan and Ossi.
+ *
+ * This is the handler, that registers new contributions.
+ *
+ * @param event
+ */
 export const handleEvent = (event: any) => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
@@ -14,7 +19,7 @@ export const handleEvent = (event: any) => {
         })
     }
     const body = JSON.parse(event.body);
-    console.log(JSON.stringify(body));
+
     if (body.challenge) {
         return Promise.resolve(
             {
@@ -28,95 +33,46 @@ export const handleEvent = (event: any) => {
         return Promise.resolve({statusCode: 200});
     }
 
-    return new Promise(resolve => {
-
-        if (body.event.text) {
-            if (body.event.text.length < 50) {
-                axios.post('https://slack.com/api/chat.postMessage', {
-                    text: 'Hmm, that seems bit short description of your Open Source Contribution. Could you elaborate?',
-                    channel: body.event.channel
-                }, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+    if (body.event.text.length < 50) {
+        return postMessage(body.event.channel,
+            'Hmm, that seems bit short description of your Open Source Contribution. Could you elaborate?');
+    } else {
+        return writeContribution(body.event.user, body.event.text, body.event.channel).then((eventId) => {
+            return postMessage(body.event.channel,
+                'Do you want me to submit this one?',
+                [
+                    {
+                        text: `${body.event.text}`,
+                        fallback: "Something went wrong",
+                        callback_id: eventId,
+                        color: "#3AA3E3",
+                        attachment_type: "default",
+                        actions: [
+                            {
+                                name: "STATE",
+                                text: "Don't send this",
+                                type: "button",
+                                value: "cancel",
+                                style: "danger"
+                            },
+                            {
+                                name: "STATE",
+                                text: "Medium bonus - 200 € :moneybag: :moneybag: :moneybag:",
+                                type: "button",
+                                value: "medium",
+                                style: "primary"
+                            },
+                            {
+                                name: "STATE",
+                                text: "Small bonus - 50 € :moneybag:",
+                                type: "button",
+                                value: "small",
+                                style: "primary"
+                            }
+                        ]
                     }
-                }).then(r => resolve({statusCode: 200}));
-            } else {
-                writeContribution(body.event.user, body.event.text, body.event.channel).then((eventId) => {
-                    return axios.post('https://slack.com/api/chat.postMessage',
-                        {
-                            text: `Hi there! Did I received a contribution from you? Do you want me to submit this one?`,
-                            attachments: [
-                                {
-                                    text: `${body.event.text}...`,
-                                    fallback: "Something went wrong",
-                                    callback_id: eventId,
-                                    color: "#3AA3E3",
-                                    attachment_type: "default",
-                                    actions: [
-                                        {
-                                            name: "STATE",
-                                            text: "Don't send this",
-                                            type: "button",
-                                            value: "cancel",
-                                            style: "danger"
-                                        },
-                                        {
-                                            name: "STATE",
-                                            text: "Medium bonus - 200 €",
-                                            type: "button",
-                                            value: "medium",
-                                            style: "primary"
-                                        },
-                                        {
-                                            name: "STATE",
-                                            text: "Small bonus - 50 €",
-                                            type: "button",
-                                            value: "small",
-                                            style: "primary"
-                                        },
-                                        {
-                                            name: "STATE",
-                                            text: "No €, just wanted to let you know",
-                                            type: "button",
-                                            value: "no",
-                                            style: "primary"
-                                        }
-                                    ]
-                                }
-                            ],
-
-                            channel: body.event.channel
-                        },
-                        {
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-                            }
-                        });
-                }).catch(err => {
-                    return axios.post('https://slack.com/api/chat.postMessage',
-                        {
-                            text: `Sorry. Something is not right. :scream_cat:`,
-                            channel: body.event.channel
-                        },
-                        {
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-                            }
-                        });
-                }).then(r => resolve({statusCode: 200}))
-            }
-        } else {
-            resolve({
-                statusCode: 200
-            });
-        }
-    });
-
-
-    return Promise.resolve({
-        statusCode: 200
-    });
+                ]
+            )
+        });
+    }
 };
