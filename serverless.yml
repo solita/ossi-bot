@@ -23,7 +23,7 @@ provider:
 
 # you can overwrite defaults here
 #  stage: dev
-  region: eu-west-1
+  region: eu-north-1
   environment:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
     SLACK_TOKEN: ${env:SLACK_TOKEN}
@@ -42,7 +42,7 @@ provider:
         - dynamodb:GetRecords
         - dynamodb:GetShardIterator
         - dynamodb:ListStreams
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/os-contributions"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions"
 
 # you can define service wide environment variables here
 #  environment:
@@ -91,6 +91,7 @@ functions:
     events:
       - stream:
           type: dynamodb
+          batchSize: 1
           arn:
             Fn::GetAtt: [ ContributionsTable, StreamArn ]
 
@@ -159,7 +160,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: os-contributions
+        TableName: ossi-contributions
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
 #  Outputs:

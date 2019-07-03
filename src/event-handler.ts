@@ -30,7 +30,7 @@ export const handleEvent = (event: any) => {
     return new Promise(resolve => {
 
         if (body.event.text) {
-            if(body.event.text.length < 50) {
+            if (body.event.text.length < 50) {
                 axios.post('https://slack.com/api/chat.postMessage', {
                     text: 'Hmm, that seems bit short description of your Open Source Contribution. Could you elaborate?',
                     channel: body.event.channel
@@ -85,6 +85,18 @@ export const handleEvent = (event: any) => {
                                 }
                             ],
 
+                            channel: body.event.channel
+                        },
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${process.env.SLACK_TOKEN}`
+                            }
+                        });
+                }).catch(err => {
+                    return axios.post('https://slack.com/api/chat.postMessage',
+                        {
+                            text: `Sorry. Something is not right. :scream_cat:`,
                             channel: body.event.channel
                         },
                         {

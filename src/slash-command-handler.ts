@@ -46,9 +46,24 @@ export const handleSlashCommand = (event: any) => {
                 attachments: results.Items.map((item) => {
                     return {
                         fallback: 'fallback',
-                        color: "#36a64f",
+                        color: (function(status) {
+                            if(status === 'PENDING') {
+                                return "#ffff00";
+                            }
+                            if(status === 'ACCEPTED') {
+                                return "#36a64f";
+                            }
+                            if(status === 'DECLINED') {
+                                return "#ff0000";
+                            }
+                        })(item.status),
                         text: item.text,
                         fields: [
+                            {
+                                title: "Size",
+                                value: item.size,
+                                short: true
+                            },
                             {
                                 title: "Status",
                                 value: item.status,

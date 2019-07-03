@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent} from "./slack-auth";
-import {deleteEntry, updateState} from "./dynamo";
+import {deleteEntry, updateState, updateSize, getContribution} from "./dynamo";
 const { parse } = require('querystring');
 
 export const changeState = (event: any) => {
@@ -25,7 +25,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'large') {
-        return updateState(id, seq, 'LARGE')
+        return updateSize(id, seq, 'LARGE')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -36,7 +36,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'medium') {
-        return updateState(id, seq, 'MEDIUM')
+        return updateSize(id, seq, 'MEDIUM')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -47,7 +47,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'small') {
-        return updateState(id, seq, 'SMALL')
+        return updateSize(id, seq, 'SMALL')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -57,30 +57,8 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'accepted') {
-        return updateState(id, seq, 'ACCEPTED')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: 'Accepted this contribution'
-                    })
-                }
-            });
-    }
-    if(interaction.actions[0].value === 'declined') {
-        return updateState(id, seq, 'DECLINED')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: 'Declined this contribution'
-                    })
-                }
-            });
-    }
     if(interaction.actions[0].value === 'no') {
-        return updateState(id, seq, 'NO')
+        return updateSize(id, seq, 'NO')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -89,6 +67,71 @@ export const changeState = (event: any) => {
                     })
                 }
             });
+    }
+    if(interaction.actions[0].value === 'accepted') {
+        return getContribution(id, seq).then(item => {
+            return updateState(id, seq, 'ACCEPTED')
+                .then(_ => {
+                    return {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            attachments: [
+                                {
+                                    color: "#36a64f",
+                                    pretext: "Accepted contribution",
+                                    author_name: item.username,
+                                    text: item.text,
+                                    fields: [
+                                        {
+                                            title: "Size",
+                                            value: item.size,
+                                            short: true
+                                        },
+                                        {
+                                            title: "Status",
+                                            value: 'ACCEPTED',
+                                            short: true
+                                        }
+                                    ]
+                                }
+                            ]
+                        })
+                    }
+                });
+        });
+
+    }
+    if(interaction.actions[0].value === 'declined') {
+        return getContribution(id, seq).then(item => {
+            return updateState(id, seq, 'DECLINED')
+                .then(_ => {
+                    return {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            attachments: [
+                                {
+                                    color: "#ff0000",
+                                    pretext: "Declined contribution",
+                                    author_name: item.username,
+                                    text: item.text,
+                                    fields: [
+                                        {
+                                            title: "Size",
+                                            value: item.size,
+                                            short: true
+                                        },
+                                        {
+                                            title: "Status",
+                                            value: 'DECLINED',
+                                            short: true
+                                        }
+                                    ]
+                                }
+                            ]
+                        })
+                    }
+                });
+        });
     }
     return Promise.resolve({
         statusCode: 200,

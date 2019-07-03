@@ -5,7 +5,7 @@ const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
 export const getContributions = (id: string) => {
     var params = {
-        TableName: 'os-contributions',
+        TableName: 'ossi-contributions',
         ExpressionAttributeValues: {
             ':id': id
         },
@@ -14,9 +14,25 @@ export const getContributions = (id: string) => {
     return ddb.query(params).promise();
 };
 
+export const getContribution = (id: string, seq: string) => {
+    var params = {
+        TableName: 'ossi-contributions',
+        ExpressionAttributeValues: {
+            ':id': id,
+            ':sequence': parseInt(seq)
+        },
+        ExpressionAttributeNames: {
+            '#id': 'id',
+            '#sequence': 'sequence'
+        },
+        KeyConditionExpression: '#id = :id and #sequence = :sequence',
+    };
+    return ddb.query(params).promise().then(results => results.Items[0]);
+};
+
 export const deleteEntry = (id: string, seq: string) => {
     var params = {
-        TableName: 'os-contributions',
+        TableName: 'ossi-contributions',
         Key: {
             id: id,
             sequence: parseInt(seq)
@@ -26,10 +42,9 @@ export const deleteEntry = (id: string, seq: string) => {
 };
 
 export const updateState = (id: string, seq: string,
-                            state: 'PENDING' | 'LARGE' | 'MEDIUM' | 'SMALL' | 'NO' |
-                                'ACCEPTED' | 'DECLINED') => {
+                            state: 'INITIAL' | 'PENDING' | 'ACCEPTED' | 'DECLINED') => {
     var params = {
-        TableName: 'os-contributions',
+        TableName: 'ossi-contributions',
         Key: {
             id: id,
             sequence: parseInt(seq)
@@ -43,9 +58,27 @@ export const updateState = (id: string, seq: string,
     return ddb.update(params).promise();
 };
 
+export const updateSize = (id: string, seq: string,
+                               size: 'LARGE' | 'MEDIUM' | 'SMALL' | 'NO' ) => {
+    var params = {
+        TableName: 'ossi-contributions',
+        Key: {
+            id: id,
+            sequence: parseInt(seq)
+        },
+        ExpressionAttributeNames: {'#size' : 'size', '#status': 'status'},
+        UpdateExpression: 'set #size = :size, #status = :status',
+        ExpressionAttributeValues: {
+            ':size': size,
+            ':status': 'PENDING'
+        }
+    };
+    return ddb.update(params).promise();
+};
+
 export const getNewSequenceId = (id: string): Promise<any> => {
     var params = {
-        TableName: 'os-contributions',
+        TableName: 'ossi-contributions',
         ExpressionAttributeValues: {
             ':id': id
         },
@@ -71,13 +104,14 @@ export const writeContribution = async (id: string, text: string, privateChannel
         });
 
     var params = {
-        TableName: 'os-contributions',
+        TableName: 'ossi-contributions',
         Item: {
             'id' : id,
             'sequence' : seqId,
             'text' : text,
             'username': userInfo.data.user.real_name,
-            'status': 'PENDING',
+            'status': 'INITIAL',
+            'size': 'UNKNOWN',
             'privateChannel': privateChannel
         }
     };

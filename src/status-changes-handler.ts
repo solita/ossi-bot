@@ -7,10 +7,15 @@ const sendNotification = (data: any) => {
             attachments: [
                 {
                     fallback: 'fallback',
-                    color: "#36a64f",
+                    color: "#ffff00",
                     callback_id: `${data.id.S}-${data.sequence.N}`,
                     text: data.text.S,
                     fields: [
+                        {
+                            title: "Size",
+                            value: data.size.S,
+                            short: true
+                        },
                         {
                             title: "Status",
                             value: data.status.S,
@@ -58,10 +63,25 @@ const sendResult = (data: any) => {
             attachments: [
                 {
                     fallback: 'fallback',
-                    color: "#36a64f",
+                    color: (function(status) {
+                        if(status === 'PENDING') {
+                            return "#ffff00";
+                        }
+                        if(status === 'ACCEPTED') {
+                            return "#36a64f";
+                        }
+                        if(status === 'DECLINED') {
+                            return "#ff0000";
+                        }
+                    })(data.status.S),
                     callback_id: `${data.id.S}-${data.sequence.N}`,
                     text: data.text.S,
                     fields: [
+                        {
+                            title: "Size",
+                            value: data.size.S,
+                            short: true
+                        },
                         {
                             title: "Status",
                             value: data.status.S,
@@ -89,23 +109,38 @@ const sendResult = (data: any) => {
 export const handleStream = async (event: any) => {
     console.log(JSON.stringify(event, null, 2));
 
-    const payloads = [] as any[];
-    event.Records.forEach((item: any) => {
-        if(item.dynamodb.NewImage && (item.dynamodb.NewImage.status.S === 'ACCEPTED' || item.dynamodb.NewImage.status.S === 'DECLINED')) {
-            payloads.push(() => sendResult(item.dynamodb.NewImage));
-        }
-        else if(item.dynamodb.OldImage && item.dynamodb.NewImage && item.dynamodb.OldImage.status.S === 'PENDING' && item.dynamodb.OldImage.status.S !== item.dynamodb.NewImage.status.S) {
-            payloads.push(() => sendNotification(item.dynamodb.NewImage));
-        }
+    if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
+        return Promise.resolve({message: 'OK'})
+    }
 
-    });
+    // const oldImage = event.Records[0].OldImage;
+    const newImage = event.Records[0].dynamodb.NewImage;
 
-    console.log(JSON.stringify(payloads));
+    if (newImage.status.S === 'PENDING') {
+        return sendNotification(newImage)
+            .then(() => {
+                console.log('Sent notification');
+                return {message: 'OK'};
+            })
+            .catch((err) => {
+                console.error('Error while sending notification');
+                console.error(err);
+                return {message: 'OK'}
+            });
+    }
 
-    return Promise.all(payloads.map((a: any) => a())).then((s) => {
-        console.log(`Sent ${s.length} notifications`);
-        return {
-            invocation: s.length
-        };
-    });
+    if (newImage.status.S === 'ACCEPTED' || newImage.status.S === 'DECLINED') {
+        return sendResult(newImage)
+            .then(() => {
+                console.log('Sent result');
+                return {message: 'OK'};
+            })
+            .catch((err) => {
+                console.error('Error while sending result');
+                console.error(err);
+                return {message: 'OK'}
+            });
+    }
+
+
 };
