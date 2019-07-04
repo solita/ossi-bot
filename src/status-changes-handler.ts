@@ -120,11 +120,6 @@ const sendToPublicChannel = (data: any) => {
                         title: "Status",
                         value: data.status.S,
                         short: true
-                    },
-                    {
-                        title: "Rollback ID",
-                        value: `${data.id.S}-${data.sequence.N}`,
-                        short: true
                     }
                 ]
             }
