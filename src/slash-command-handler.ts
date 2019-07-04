@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent} from "./slack-auth";
-import {listContributions, replyWithHelp, rollbackContribution} from "./shared/slack-interaction";
+import {listContributions, replyWithHelp} from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
 type SlackSlashCommandPayload = {
@@ -27,8 +27,13 @@ export const handleSlashCommand = (event: any) => {
     const interaction: SlackSlashCommandPayload = parse(event.body);
 
     if(interaction.text.startsWith('rollback')) {
-        const rollbackId = interaction.text.split(' ')[1];
-        return rollbackContribution(rollbackId);
+        return Promise.resolve({
+            statusCode: 200,
+            body: JSON.stringify({
+                statusCode: 200,
+                text: 'Sorry, no rollbacks for you my friend!'
+            })
+        })
     }
 
     if(interaction.text === 'list') {

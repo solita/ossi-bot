@@ -84,11 +84,6 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
                             title: "Status",
                             value: item.status,
                             short: true
-                        },
-                        {
-                            title: "Rollback ID",
-                            value: `${item.id}-${item.sequence}`,
-                            short: true
                         }
                     ]
                 };
@@ -120,7 +115,6 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "I have additional features under this slash command. My slash commands are all _ephemeral_ which means only you see the results. So feel free to shoot slash commands at any channel.",
         "",
         "`list` lists your submitted contributions",
-        "`rollback ROLLBACK_ID` removes your contribution with given rollback id _(don't use this unless you exactly know, what you are doing :great_success:)_",
         "",
         "I'm deployed into :aws-super-hero: AWS Cloud to `eu-north-1` region to Solita Sandbox account. I'm built of Node.js, Typescript, Serverless, Api Gateway, Lambda and DynamoDB.",
         "",

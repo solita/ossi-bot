@@ -23,7 +23,7 @@ const sendNotificationToManagementChannel = (data: any) => {
                         short: true
                     },
                     {
-                        title: "Rollback ID",
+                        title: "ID",
                         value: `${data.id.S}-${data.sequence.N}`,
                         short: true
                     }
@@ -78,11 +78,6 @@ const sendResult = (data: any) => {
                     {
                         title: "Status",
                         value: data.status.S,
-                        short: true
-                    },
-                    {
-                        title: "Rollback ID",
-                        value: `${data.id.S}-${data.sequence.N}`,
                         short: true
                     }
                 ]
