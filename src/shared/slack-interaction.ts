@@ -114,6 +114,7 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "",
         "I have additional features under this slash command. My slash commands are all _ephemeral_ which means only you see the results. So feel free to shoot slash commands at any channel.",
         "",
+        "`help` shows this help",
         "`list` lists your submitted contributions",
         "",
         "I'm deployed into :aws-super-hero: AWS Cloud to `eu-north-1` region to Solita Sandbox account. I'm built of Node.js, Typescript, Serverless, Api Gateway, Lambda and DynamoDB.",
