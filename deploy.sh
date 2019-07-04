@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 if [[ -z "${SLACK_SIGNING_SECRET}" ]]; then
     echo "No Slack Signing Secret in env"
     exit 1
@@ -12,6 +14,11 @@ fi
 
 if [[ -z "${MANAGEMENT_CHANNEL}" ]]; then
     echo "No Management channel in env"
+    exit 1
+fi
+
+if [[ -z "${PUBLIC_CHANNEL}" ]]; then
+    echo "No Public channel in env"
     exit 1
 fi
 

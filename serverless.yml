@@ -34,6 +34,7 @@ provider:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
     SLACK_TOKEN: ${env:SLACK_TOKEN}
     MANAGEMENT_CHANNEL: ${env:MANAGEMENT_CHANNEL}
+    PUBLIC_CHANNEL: ${env:PUBLIC_CHANNEL}
 
 # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:

@@ -90,6 +90,47 @@ const sendResult = (data: any) => {
         ]);
 };
 
+const sendToPublicChannel = (data: any) => {
+    return postMessage(
+        Config.get("PUBLIC_CHANNEL"),
+        `Hello hello! Here's a new contribution by ${data.username.S}!`,
+        [
+            {
+                fallback: 'fallback',
+                color: (function(status) {
+                    if(status === 'PENDING') {
+                        return "#ffff00";
+                    }
+                    if(status === 'ACCEPTED') {
+                        return "#36a64f";
+                    }
+                    if(status === 'DECLINED') {
+                        return "#ff0000";
+                    }
+                })(data.status.S),
+                callback_id: `${data.id.S}-${data.sequence.N}`,
+                text: data.text.S,
+                fields: [
+                    {
+                        title: "Size",
+                        value: data.size.S,
+                        short: true
+                    },
+                    {
+                        title: "Status",
+                        value: data.status.S,
+                        short: true
+                    },
+                    {
+                        title: "Rollback ID",
+                        value: `${data.id.S}-${data.sequence.N}`,
+                        short: true
+                    }
+                ]
+            }
+        ]);
+};
+
 export const handleStream = async (event: any) => {
     console.log(JSON.stringify(event, null, 2));
 
@@ -108,6 +149,22 @@ export const handleStream = async (event: any) => {
             })
             .catch((err) => {
                 console.error('Error while sending notification');
+                console.error(err);
+                return {message: 'OK'}
+            });
+    }
+
+    if (newImage.status.S === 'ACCEPTED') {
+        return sendResult(newImage)
+            .then(() => {
+                return sendToPublicChannel(newImage);
+            })
+            .then(() => {
+                console.log('Sent result');
+                return {message: 'OK'};
+            })
+            .catch((err) => {
+                console.error('Error while sending result');
                 console.error(err);
                 return {message: 'OK'}
             });
