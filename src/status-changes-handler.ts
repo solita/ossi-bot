@@ -1,5 +1,6 @@
 import {Config} from "./shared/config";
 import {postMessage} from "./shared/slack-interaction";
+import * as moment from "moment-timezone";
 
 const sendNotificationToManagementChannel = (data: any) => {
     return postMessage(
@@ -26,7 +27,12 @@ const sendNotificationToManagementChannel = (data: any) => {
                         title: "ID",
                         value: `${data.id.S}-${data.sequence.N}`,
                         short: true
-                    }
+                    },
+                    {
+                        title: "Submitted",
+                        value: moment(parseInt(data.timestamp.N)).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
+                        short: true
+                    },
                 ],
                 actions: [
                     {

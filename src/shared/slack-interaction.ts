@@ -1,5 +1,6 @@
 import {deleteEntry, getContributions} from "./dynamo";
 import axios from "axios";
+import * as moment from 'moment-timezone';
 import {Config} from "./config";
 
 export type LambdaResponse = {
@@ -84,7 +85,12 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
                             title: "Status",
                             value: item.status,
                             short: true
-                        }
+                        },
+                        {
+                            title: "Submitted",
+                            value: moment(item.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
+                            short: true
+                        },
                     ]
                 };
             })

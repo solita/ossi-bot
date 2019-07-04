@@ -1,5 +1,6 @@
 import { DynamoDB } from 'aws-sdk';
 import axios from "axios";
+import * as moment from 'moment';
 import {Config} from "./config";
 import {Contribution, Status, Size} from "./model";
 
@@ -116,7 +117,7 @@ export const writeContribution = async (id: string, text: string, privateChannel
             'status': 'INITIAL',
             'size': 'UNKNOWN',
             'privateChannel': privateChannel,
-            'timestamp': Date.now()
+            'timestamp': moment().valueOf()
         }
     };
     return ddb.put(params).promise().then(_ => `${id}-${seqId}`);
