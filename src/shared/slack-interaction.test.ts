@@ -38,7 +38,7 @@ describe('slack-interaction.ts', () => {
             dynamo.getContributions = jest.fn(() => {
                 return Promise.resolve([{
                     id: 'abc',
-                    sequence: 1,
+                    timestamp: 1,
                     privateChannel: '123',
                     size: 'SMALL',
                     status: 'PENDING',

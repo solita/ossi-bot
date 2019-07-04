@@ -8,7 +8,7 @@ const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
 export const getContributions = (id: string): Promise<Contribution[]> => {
     var params = {
-        TableName: 'ossi-contributions',
+        TableName: 'ossi-contributions-table',
         ExpressionAttributeValues: {
             ':id': id
         },
@@ -18,40 +18,40 @@ export const getContributions = (id: string): Promise<Contribution[]> => {
         .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
 };
 
-export const getContribution = (id: string, seq: string) => {
+export const getContribution = (id: string, timestamp: string) => {
     var params = {
-        TableName: 'ossi-contributions',
+        TableName: 'ossi-contributions-table',
         ExpressionAttributeValues: {
             ':id': id,
-            ':sequence': parseInt(seq)
+            ':timestamp': parseInt(timestamp)
         },
         ExpressionAttributeNames: {
             '#id': 'id',
-            '#sequence': 'sequence'
+            '#timestamp': 'timestamp'
         },
-        KeyConditionExpression: '#id = :id and #sequence = :sequence',
+        KeyConditionExpression: '#id = :id and #timestamp = :timestamp',
     };
     return ddb.query(params).promise().then(results => results.Items[0]);
 };
 
-export const deleteEntry = (id: string, seq: string) => {
+export const deleteEntry = (id: string, timestamp: string) => {
     var params = {
-        TableName: 'ossi-contributions',
+        TableName: 'ossi-contributions-table',
         Key: {
             id: id,
-            sequence: parseInt(seq)
+            timestamp: parseInt(timestamp)
         }
     };
     return ddb.delete(params).promise();
 };
 
-export const updateState = (id: string, seq: string,
+export const updateState = (id: string, timestamp: string,
                             state: Status) => {
     var params = {
-        TableName: 'ossi-contributions',
+        TableName: 'ossi-contributions-table',
         Key: {
             id: id,
-            sequence: parseInt(seq)
+            timestamp: parseInt(timestamp)
         },
         ExpressionAttributeNames: {'#status' : 'status'},
         UpdateExpression: 'set #status = :status',
@@ -62,13 +62,13 @@ export const updateState = (id: string, seq: string,
     return ddb.update(params).promise();
 };
 
-export const updateSize = (id: string, seq: string,
+export const updateSize = (id: string, timestamp: string,
                                size: Size ) => {
     var params = {
-        TableName: 'ossi-contributions',
+        TableName: 'ossi-contributions-table',
         Key: {
             id: id,
-            sequence: parseInt(seq)
+            timestamp: parseInt(timestamp)
         },
         ExpressionAttributeNames: {'#size' : 'size', '#status': 'status'},
         UpdateExpression: 'set #size = :size, #status = :status',
@@ -80,45 +80,27 @@ export const updateSize = (id: string, seq: string,
     return ddb.update(params).promise();
 };
 
-export const getNewSequenceId = (id: string): Promise<any> => {
-    var params = {
-        TableName: 'ossi-contributions',
-        ExpressionAttributeValues: {
-            ':id': id
-        },
-        KeyConditionExpression: 'id = :id',
-        ScanIndexForward: false,
-        Limit: 1
-    };
-    return ddb.query(params).promise().then((results: any) => {
-        if(results.Items.length === 0) {
-            return 1;
-        }
-        return results.Items[0].sequence + 1;
-    });
-};
 
 export const writeContribution = async (id: string, text: string, privateChannel: string): Promise<any> => {
-    const seqId = await getNewSequenceId(id);
     const userInfo = await axios.get(`https://slack.com/api/users.info?user=${id}`,
         {
             headers: {
                 "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
             }
         });
-
+    const timestamp = moment().valueOf();
     var params = {
-        TableName: 'ossi-contributions',
+        TableName: 'ossi-contributions-table',
         Item: {
             'id' : id,
-            'sequence' : seqId,
+            'timestamp': timestamp,
             'text' : text,
             'username': userInfo.data.user.real_name,
             'status': 'INITIAL',
             'size': 'UNKNOWN',
             'privateChannel': privateChannel,
-            'timestamp': moment().valueOf()
+
         }
     };
-    return ddb.put(params).promise().then(_ => `${id}-${seqId}`);
+    return ddb.put(params).promise().then(_ => `${id}-${timestamp}`);
 };

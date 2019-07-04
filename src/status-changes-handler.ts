@@ -10,7 +10,7 @@ const sendNotificationToManagementChannel = (data: any) => {
             {
                 fallback: 'fallback',
                 color: "#ffff00",
-                callback_id: `${data.id.S}-${data.sequence.N}`,
+                callback_id: `${data.id.S}-${data.timestamp.N}`,
                 text: data.text.S,
                 fields: [
                     {
@@ -25,7 +25,7 @@ const sendNotificationToManagementChannel = (data: any) => {
                     },
                     {
                         title: "ID",
-                        value: `${data.id.S}-${data.sequence.N}`,
+                        value: `${data.id.S}-${data.timestamp.N}`,
                         short: true
                     },
                     {
@@ -73,7 +73,7 @@ const sendResult = (data: any) => {
                         return "#ff0000";
                     }
                 })(data.status.S),
-                callback_id: `${data.id.S}-${data.sequence.N}`,
+                callback_id: `${data.id.S}-${data.timestamp.N}`,
                 text: data.text.S,
                 fields: [
                     {
@@ -109,7 +109,7 @@ const sendToPublicChannel = (data: any) => {
                         return "#ff0000";
                     }
                 })(data.status.S),
-                callback_id: `${data.id.S}-${data.sequence.N}`,
+                callback_id: `${data.id.S}-${data.timestamp.N}`,
                 text: data.text.S,
                 fields: [
                     {

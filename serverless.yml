@@ -49,7 +49,7 @@ provider:
         - dynamodb:GetRecords
         - dynamodb:GetShardIterator
         - dynamodb:ListStreams
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions-table"
 
 # you can define service wide environment variables here
 #  environment:
@@ -141,7 +141,7 @@ resources:
             AttributeName: id
             AttributeType: S
           -
-            AttributeName: sequence
+            AttributeName: timestamp
             AttributeType: N
 #          -
 #            AttributeName: text
@@ -155,12 +155,12 @@ resources:
             AttributeName: id
             KeyType: HASH
           -
-            AttributeName: sequence
+            AttributeName: timestamp
             KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: ossi-contributions
+        TableName: ossi-contributions-table
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
         Tags:

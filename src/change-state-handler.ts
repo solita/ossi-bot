@@ -19,9 +19,9 @@ export const changeState = (event: any) => {
         })
     }
     const interaction = JSON.parse(parse(event.body).payload);
-    const [id, seq] = interaction.callback_id.split('-');
+    const [id, timestamp] = interaction.callback_id.split('-');
     if(interaction.actions[0].value === 'cancel') {
-        return deleteEntry(id, seq)
+        return deleteEntry(id, timestamp)
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -32,7 +32,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'large') {
-        return updateSize(id, seq, 'LARGE')
+        return updateSize(id, timestamp, 'LARGE')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -43,7 +43,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'medium') {
-        return updateSize(id, seq, 'MEDIUM')
+        return updateSize(id, timestamp, 'MEDIUM')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -54,7 +54,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'small') {
-        return updateSize(id, seq, 'SMALL')
+        return updateSize(id, timestamp, 'SMALL')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -65,7 +65,7 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'competence_development') {
-        return updateSize(id, seq, 'COMPETENCE_DEVELOPMENT')
+        return updateSize(id, timestamp, 'COMPETENCE_DEVELOPMENT')
             .then(_ => {
                 return {
                     statusCode: 200,
@@ -76,8 +76,8 @@ export const changeState = (event: any) => {
             });
     }
     if(interaction.actions[0].value === 'accepted') {
-        return getContribution(id, seq).then(item => {
-            return updateState(id, seq, 'ACCEPTED')
+        return getContribution(id, timestamp).then(item => {
+            return updateState(id, timestamp, 'ACCEPTED')
                 .then(_ => {
                     return {
                         statusCode: 200,
@@ -117,8 +117,8 @@ export const changeState = (event: any) => {
 
     }
     if(interaction.actions[0].value === 'declined') {
-        return getContribution(id, seq).then(item => {
-            return updateState(id, seq, 'DECLINED')
+        return getContribution(id, timestamp).then(item => {
+            return updateState(id, timestamp, 'DECLINED')
                 .then(_ => {
                     return {
                         statusCode: 200,
