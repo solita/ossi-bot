@@ -107,16 +107,22 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
 export function replyWithHelp(): Promise<LambdaResponse> {
     const helpMessage = [
         "*Hi there!*",
-        "My name is Ossi :robot_face:, and I'm here to record your Open Source Contributions.",
         "",
-        "You can send me a *private message* which describes your contribution. Then I will ask you, if you want to submit given contribution. " +
-        "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel about new contribution.",
-        "When your contribution gets processed, I will notify you back.",
+        "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
         "",
-        "I have additional features under this slash command",
+        "You can send me (Ossitron-2000) a *private message* which describes your contribution. Then I will ask, if you want to submit given contribution. " +
+        "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel about your contribution.",
         "",
-        "`list` lists your submitted contibutions",
-        "`rollback ROLLBACK_ID` removes your contribution with given rollback id (don't use this unless you exactly know, what you are doing)",
+        "When your contribution gets processed, I will notify you back.", ,
+        "",
+        "If you have questions about the process contact Valtteri Valovirta. If I'm broken contact Juho Friman.",
+        "",
+        "I have additional features under this slash command. My slash commands are all _ephemeral_ which means only you see the results. So feel free to shoot slash commands at any channel.",
+        "",
+        "`list` lists your submitted contributions",
+        "`rollback ROLLBACK_ID` removes your contribution with given rollback id _(don't use this unless you exactly know, what you are doing :great_success:)_",
+        "",
+        "I'm deployed into :aws-super-hero: AWS Cloud to `eu-north-1` region to Solita Sandbox account. I'm built of Node.js, Typescript, Serverless, Api Gateway, Lambda and DynamoDB.",
         "",
         "_Information about the policy_: https://intra.solita.fi/pages/viewpage.action?pageId=76514684",
         "_My source code_: https://github.com/solita/ossi-bot _(not yet published)_"

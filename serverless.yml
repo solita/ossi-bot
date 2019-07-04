@@ -24,10 +24,16 @@ provider:
 # you can overwrite defaults here
 #  stage: dev
   region: eu-north-1
+  stackTags:
+    Owner: Juho Friman
+    Duedate: 011219
+  tags:
+    Owner: Juho Friman
+    Duedate: 011219
   environment:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
     SLACK_TOKEN: ${env:SLACK_TOKEN}
-    MANAGEMENT_CHANNEL: "#ossi-management"
+    MANAGEMENT_CHANNEL: ${env:MANAGEMENT_CHANNEL}
 
 # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
@@ -156,6 +162,15 @@ resources:
         TableName: ossi-contributions
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
+        Tags:
+          -
+            Key: Owner
+            Value: Juho Friman
+          -
+            Key: Duedate
+            Value: 011219
+
+
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"

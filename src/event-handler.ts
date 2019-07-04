@@ -21,6 +21,7 @@ export const handleEvent = (event: any) => {
     const body = JSON.parse(event.body);
 
     if (body.challenge) {
+        console.info('Challenge request received');
         return Promise.resolve(
             {
                 statusCode: 200,
@@ -29,7 +30,13 @@ export const handleEvent = (event: any) => {
     }
 
     if (body.event.subtype === 'bot_message') {
-        console.log('Bot message, nothing to do');
+        console.info('Bot message, nothing to do');
+        return Promise.resolve({statusCode: 200});
+    }
+
+    if(!body.event.text) {
+        console.info('Message without text');
+        console.info(JSON.stringify(body, null, 2));
         return Promise.resolve({statusCode: 200});
     }
 

@@ -6,7 +6,7 @@ jspm_packages
 .serverless
 
 env.sh
-
+solita-env.sh
 *.iml
 
 .idea

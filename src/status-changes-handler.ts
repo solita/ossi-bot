@@ -38,7 +38,7 @@ const sendNotificationToManagementChannel = (data: any) => {
                     },
                     {
                         name: "STATE",
-                        text: "decline",
+                        text: "Decline",
                         type: "button",
                         value: "declined",
                         style: "danger"
