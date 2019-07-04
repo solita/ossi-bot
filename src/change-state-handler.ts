@@ -2,6 +2,7 @@
 
 import { authLambdaEvent} from "./slack-auth";
 import {deleteEntry, updateState, updateSize, getContribution} from "./shared/dynamo";
+import {Config} from "./shared/config";
 const { parse } = require('querystring');
 
 /**
@@ -48,7 +49,7 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: "Marked your contribution to be medium. I will get back to you, when your contribution gets processed."
+                        text: `Marked your contribution to be medium. I will get back to you, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
                     })
                 }
             });
@@ -59,7 +60,7 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: "Marked your contribution to be small. I will get back to you, when your contribution gets processed."
+                        text: `Marked your contribution to be small. I will get back to you, when your contribution gets processed.  All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
                     })
                 }
             });
@@ -70,7 +71,7 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: "Marked your contribution to be no compensation."
+                        text: `Marked your contribution to be no compensation. Even though you did not request for compensation, I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
                     })
                 }
             });
@@ -81,7 +82,7 @@ export const changeState = (event: any) => {
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
-                        text: 'Good to know that you use competence development hours for Open Source work.'
+                        text: `Good to know that you use competence development hours for Open Source work. You don't get compensation when using competence development hours for OSS work, but I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
                     })
                 }
             });
