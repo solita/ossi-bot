@@ -64,6 +64,17 @@ export const changeState = (event: any) => {
                 }
             });
     }
+    if(interaction.actions[0].value === 'no_compensation') {
+        return updateSize(id, timestamp, 'NO_COMPENSATION')
+            .then(_ => {
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        text: "Marked your contribution to be no compensation."
+                    })
+                }
+            });
+    }
     if(interaction.actions[0].value === 'competence_development') {
         return updateSize(id, timestamp, 'COMPETENCE_DEVELOPMENT')
             .then(_ => {

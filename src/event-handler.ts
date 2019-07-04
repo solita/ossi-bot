@@ -76,7 +76,13 @@ export const handleEvent = (event: any) => {
                                 value: "small",
                                 style: "primary"
                             },
-                            ,
+                            {
+                                name: "STATE",
+                                text: "No compensation",
+                                type: "button",
+                                value: "no_compensation",
+                                style: "primary"
+                            },
                             {
                                 name: "STATE",
                                 text: "Competence development hours",
