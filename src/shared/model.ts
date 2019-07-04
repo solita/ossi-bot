@@ -8,5 +8,5 @@ export type Contribution = {
     size: Size;
     status: Status;
     text: string;
-
+    timestamp: number;
 }

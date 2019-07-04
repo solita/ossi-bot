@@ -11,7 +11,7 @@ type SlackSlashCommandPayload = {
 /**
  * Slash command handler replies to slash commands in slack
  *
- * /ossi -> shwo help
+ * /ossi -> show help
  * /ossi list -> lists users contributions
  * /ossi rollback -> deletes contribution
  *

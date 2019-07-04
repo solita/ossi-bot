@@ -115,7 +115,8 @@ export const writeContribution = async (id: string, text: string, privateChannel
             'username': userInfo.data.user.real_name,
             'status': 'INITIAL',
             'size': 'UNKNOWN',
-            'privateChannel': privateChannel
+            'privateChannel': privateChannel,
+            'timestamp': Date.now()
         }
     };
     return ddb.put(params).promise().then(_ => `${id}-${seqId}`);
