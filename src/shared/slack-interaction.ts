@@ -126,7 +126,7 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "I'm deployed into :aws-super-hero: AWS Cloud to `eu-north-1` region to Solita Sandbox account. I'm built of Node.js, Typescript, Serverless, Api Gateway, Lambda and DynamoDB.",
         "",
         "_Information about the policy_: https://intra.solita.fi/pages/viewpage.action?pageId=76514684",
-        "_My source code_: https://github.com/solita/ossi-bot _(not yet published)_"
+        "_My source code_: https://github.com/solita/ossi-bot (private repository at the moment)"
     ].join('\n');
     return Promise.resolve({
         statusCode: 200,
