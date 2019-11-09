@@ -8,7 +8,7 @@ const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
 export const getContributions = (id: string): Promise<Contribution[]> => {
     var params = {
-        TableName: 'ossi-contributions-table',
+        TableName: Config.get('DYNAMO_TABLE'),
         ExpressionAttributeValues: {
             ':id': id
         },
@@ -20,7 +20,7 @@ export const getContributions = (id: string): Promise<Contribution[]> => {
 
 export const getContribution = (id: string, timestamp: string) => {
     var params = {
-        TableName: 'ossi-contributions-table',
+        TableName: Config.get('DYNAMO_TABLE'),
         ExpressionAttributeValues: {
             ':id': id,
             ':timestamp': parseInt(timestamp)
@@ -36,7 +36,7 @@ export const getContribution = (id: string, timestamp: string) => {
 
 export const deleteEntry = (id: string, timestamp: string) => {
     var params = {
-        TableName: 'ossi-contributions-table',
+        TableName: Config.get('DYNAMO_TABLE'),
         Key: {
             id: id,
             timestamp: parseInt(timestamp)
@@ -48,7 +48,7 @@ export const deleteEntry = (id: string, timestamp: string) => {
 export const updateState = (id: string, timestamp: string,
                             state: Status) => {
     var params = {
-        TableName: 'ossi-contributions-table',
+        TableName: Config.get('DYNAMO_TABLE'),
         Key: {
             id: id,
             timestamp: parseInt(timestamp)
@@ -65,7 +65,7 @@ export const updateState = (id: string, timestamp: string,
 export const updateSize = (id: string, timestamp: string,
                                size: Size ) => {
     var params = {
-        TableName: 'ossi-contributions-table',
+        TableName: Config.get('DYNAMO_TABLE'),
         Key: {
             id: id,
             timestamp: parseInt(timestamp)
@@ -90,7 +90,7 @@ export const writeContribution = async (id: string, text: string, privateChannel
         });
     const timestamp = moment().valueOf();
     var params = {
-        TableName: 'ossi-contributions-table',
+        TableName: Config.get('DYNAMO_TABLE'),
         Item: {
             'id' : id,
             'timestamp': timestamp,

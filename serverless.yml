@@ -20,9 +20,7 @@ plugins:
 provider:
   name: aws
   runtime: nodejs8.10
-
-# you can overwrite defaults here
-#  stage: dev
+  stage: ${opt:stage}
   region: eu-north-1
   stackTags:
     Owner: Juho Friman
@@ -35,6 +33,9 @@ provider:
     SLACK_TOKEN: ${env:SLACK_TOKEN}
     MANAGEMENT_CHANNEL: ${env:MANAGEMENT_CHANNEL}
     PUBLIC_CHANNEL: ${env:PUBLIC_CHANNEL}
+    VERSION: ${opt:version}
+    ENVIRONMENT: ${opt:stage}
+    DYNAMO_TABLE: ossi-contributions-table-${opt:stage}
 
 # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
@@ -49,20 +50,7 @@ provider:
         - dynamodb:GetRecords
         - dynamodb:GetShardIterator
         - dynamodb:ListStreams
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions-table"
-
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
-# you can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions-table-${opt:stage}"
 
 functions:
 
@@ -95,43 +83,13 @@ functions:
           arn:
             Fn::GetAtt: [ ContributionsTable, StreamArn ]
 
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - websocket: $connect
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
 # you can add CloudFormation resource templates here
 resources:
   Resources:
+    # IMPORTANT! When making changes to DynamoDB table, ALWAYS take a backup
+    # of your data from AWS console.
+    # When DeletionPolicy id Delete, it will lose all your data if CF needs
+    # to bake a completely new table.
     ContributionsTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Delete
@@ -143,12 +101,6 @@ resources:
           -
             AttributeName: timestamp
             AttributeType: N
-#          -
-#            AttributeName: text
-#            AttributeType: S
-#          -
-#            AttributeName: status
-#            AttributeType: S
 
         KeySchema:
           -
@@ -160,7 +112,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: ossi-contributions-table
+        TableName: ossi-contributions-table-${opt:stage}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
         Tags:
@@ -170,9 +122,3 @@ resources:
           -
             Key: Duedate
             Value: 011219
-
-
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"

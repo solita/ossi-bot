@@ -3,6 +3,7 @@ import {postMessage} from "./shared/slack-interaction";
 import * as moment from "moment-timezone";
 
 const sendNotificationToManagementChannel = (data: any) => {
+    console.log(`Sending notification to management channel ${Config.get('MANAGEMENT_CHANNEL')} for ${data.id.S}-${data.timestamp.N}`);
     return postMessage(
         Config.get('MANAGEMENT_CHANNEL'),
         `Hi! I received a new open source contribution submission by ${data.username.S}!`,
@@ -56,6 +57,7 @@ const sendNotificationToManagementChannel = (data: any) => {
 };
 
 const sendResult = (data: any) => {
+    console.log(`Sending notification to private channel ${data.privateChannel.S} for ${data.id.S}-${data.timestamp.N}`);
     return postMessage(
         data.privateChannel.S,
         `Your contribution got processed!`,
@@ -92,6 +94,7 @@ const sendResult = (data: any) => {
 };
 
 const sendToPublicChannel = (data: any) => {
+    console.log(`Sending notification to public channel ${Config.get("PUBLIC_CHANNEL")} for ${data.id.S}-${data.timestamp.N}`);
     return postMessage(
         Config.get("PUBLIC_CHANNEL"),
         `Hello hello! Here's a new contribution by ${data.username.S}!`,
@@ -128,13 +131,15 @@ const sendToPublicChannel = (data: any) => {
 };
 
 export const handleStream = async (event: any) => {
-    console.log(JSON.stringify(event, null, 2));
+    // log out the raw event
+    // console.log(JSON.stringify(event, null, 2));
 
+    // Don't do anything, if event is item removal or insert
     if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
+        console.log(`Received ${event.Records[0].eventName} event. No work.`);
         return Promise.resolve({message: 'OK'})
     }
 
-    // const oldImage = event.Records[0].OldImage;
     const newImage = event.Records[0].dynamodb.NewImage;
 
     if (newImage.status.S === 'PENDING') {

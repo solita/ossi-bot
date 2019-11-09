@@ -27,10 +27,39 @@ Setting up the Slack application is the hardest part in deployment.
 13. Test declining contribution
 14. Test accepting contribution
 
+## DynamoDB Model
+
+Contributions are stored to AWS DynamoDB using partition key `userId` and sort key `timestamp`. On top of keys, a row contains the following data:
+
+* privateChannel - identifier of the private channel between Ossi Bot and contribution sender, used for sending personal notifications back
+* size - size marker of the contribution
+* text - submitted contribution text
+* name - name of the contributor resolved via Slack API
+* status
+
+**Statuses**
+
+| Status          | Explanation                                                                    |
+| --------------- | ------------------------------------------------------------------------------ |
+| INITIAL         | Initial status when Ossi asks back "do you wan't to submit this contribution?" |
+| PENDING         | Pending sanity check from management channel                                   |
+| ACCEPTED        | Accepted contribution                                                          |
+| DECLINED        | Declined contribution - only used for bogus and invalid submissions            |
+
+**Status Changes and Corresponding Stream Actions**
+
+| From       | To       | Stream Action                                                         |
+| ---------- | -------- | --------------------------------------------------------------------- |
+| INITIAL    | PENDING  | Send notification to management channel                               |
+| PENDING    | ACCEPTED | Notification to public channel and private notification to submitter  |
+| PENDING    | DECLINED | Private notification to submitter                                     |
+
 
 ## Deploy to AWS
 
-Repository contains `deploy.sh` script, which makes the deployment to an AWS account and also notifies Ossi management channel about the new deployment.
+Repository contains `deploy.sh` script, which makes the deployment to an AWS account and also notifies Ossi management channel about the new deployment. Use this for deploying.
+
+If you need to run `serverless` commands, such as `serverless info` or `serverless remove`, you can invoke `yarn serverless [PARAMS]`. Note that you need to pass `--stage dev|prod` and just bogus `--version foo`, because there are no defaults currently for options.
 
 Because deployment needs secrets, you have to set up couple of environment variables, which describes the deployed configuration.
 
@@ -39,7 +68,7 @@ Serverless framework (aws-sdk for node.js to be more exact) does not support rea
 
 Deployment of Ossi requires following variables:
 
-* **SLACK_SIGNING_SECRET** You slack apps signing secret 
+* **SLACK_SIGNING_SECRET** You slack apps signing secret
 * **SLACK_TOKEN** Bot user token for messaging back to slack
 * **MANAGEMENT_CHANNEL** channel id, where the notifications are sent, i.e `#ossi-management`
 * **PUBLIC_CHANNEL** channel id, where accepted contributions are sent, i.e `#solita-open-source`
@@ -60,6 +89,9 @@ AWS_ACCESS_KEY_ID=*** \
 ```
 
 Which opens a cool shell for me to interact with the deployment script.
+
+Developer should have two environments with proper environment keys: one for `dev` and another for `prod`. Dev environment should be hooked
+to development slack instance and naturally production to production slack instance.
 
 ## Developing
 
