@@ -81,7 +81,7 @@ export const updateSize = (id: string, timestamp: string,
 };
 
 
-export const writeContribution = async (id: string, text: string, privateChannel: string, size: string, url: string, compMonth: string): Promise<any> => {
+export const writeContribution = async (id: string, text: string, privateChannel: string, url: string, compMonth: string): Promise<any> => {
     const userInfo = await axios.get(`https://slack.com/api/users.info?user=${id}`,
         {
             headers: {
@@ -97,7 +97,7 @@ export const writeContribution = async (id: string, text: string, privateChannel
             'text': text,
             'username': userInfo.data.user.real_name,
             'status': 'INITIAL',
-            'size': size,
+            'size': 'UNKNOWN',
             'privateChannel': privateChannel,
             'url': url,
             'contributionMonth': compMonth
