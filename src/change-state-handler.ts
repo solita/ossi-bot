@@ -1,8 +1,10 @@
 'use strict';
 
-import { authLambdaEvent} from "./slack-auth";
-import {deleteEntry, updateState, updateSize, getContribution} from "./shared/dynamo";
-import {Config} from "./shared/config";
+import { authLambdaEvent } from "./slack-auth";
+import { deleteEntry, updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
+import { Config } from "./shared/config";
+
+import { postMessage, postInstantMessage } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
 /**
@@ -13,15 +15,27 @@ const { parse } = require('querystring');
  * @param event
  */
 export const changeState = (event: any) => {
-    if(!authLambdaEvent(event)) {
+    if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
             body: 'Invalid signature'
         })
     }
     const interaction = JSON.parse(parse(event.body).payload);
+    console.log("EVENT ON:", interaction);
+    if (interaction.type === 'view_submission') {
+
+        const desc = interaction.view.state.values.desc_input.description.value;
+        const channel = interaction.view.callback_id || null;
+        const url = interaction.view.state.values.url_input.url.value;
+        const month = interaction.view.state.values.comp_month_input.comp_month_val.selected_option.value;
+        const level = interaction.view.state.values.comp_lvl_input.comp_lvl_val.selected_option.value;
+        return writeContribution(interaction.user.id, desc, channel, level, url, month).then((eventId) => {
+            return postInstantMessage(interaction.user.id, "Subscribed your contribution succesfully!");
+        });
+    }
     const [id, timestamp] = interaction.callback_id.split('-');
-    if(interaction.actions[0].value === 'cancel') {
+    if (interaction.actions[0].value === 'cancel') {
         return deleteEntry(id, timestamp)
             .then(_ => {
                 return {
@@ -32,7 +46,8 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'large') {
+
+    if (interaction.actions[0].value === 'large') {
         return updateSize(id, timestamp, 'LARGE')
             .then(_ => {
                 return {
@@ -43,7 +58,7 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'medium') {
+    if (interaction.actions[0].value === 'medium') {
         return updateSize(id, timestamp, 'MEDIUM')
             .then(_ => {
                 return {
@@ -54,7 +69,7 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'small') {
+    if (interaction.actions[0].value === 'small') {
         return updateSize(id, timestamp, 'SMALL')
             .then(_ => {
                 return {
@@ -65,7 +80,7 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'no_compensation') {
+    if (interaction.actions[0].value === 'no_compensation') {
         return updateSize(id, timestamp, 'NO_COMPENSATION')
             .then(_ => {
                 return {
@@ -76,7 +91,7 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'competence_development') {
+    if (interaction.actions[0].value === 'competence_development') {
         return updateSize(id, timestamp, 'COMPETENCE_DEVELOPMENT')
             .then(_ => {
                 return {
@@ -87,7 +102,7 @@ export const changeState = (event: any) => {
                 }
             });
     }
-    if(interaction.actions[0].value === 'accepted') {
+    if (interaction.actions[0].value === 'accepted') {
         return getContribution(id, timestamp).then(item => {
             return updateState(id, timestamp, 'ACCEPTED')
                 .then(_ => {
@@ -128,7 +143,7 @@ export const changeState = (event: any) => {
         });
 
     }
-    if(interaction.actions[0].value === 'declined') {
+    if (interaction.actions[0].value === 'declined') {
         return getContribution(id, timestamp).then(item => {
             return updateState(id, timestamp, 'DECLINED')
                 .then(_ => {

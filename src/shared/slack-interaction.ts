@@ -1,7 +1,7 @@
-import {deleteEntry, getContributions} from "./dynamo";
+import { deleteEntry, getContributions } from "./dynamo";
 import axios from "axios";
 import * as moment from 'moment-timezone';
-import {Config} from "./config";
+import { Config } from "./config";
 
 export type LambdaResponse = {
     statusCode: number,
@@ -18,16 +18,217 @@ export function postMessage(channel: string, message: string, attachments: any =
             "Content-Type": "application/json",
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
-    }).then(() => ({statusCode: 200}));
+    }).then(() => ({ statusCode: 200 }));
 }
 
+export function postInstantMessage(user: string, message: string): Promise<any> {
+    return axios.post('https://slack.com/api/im.open', {
+        user: user
+    }, {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+        }
+    }).then((result) => {
+        return axios.post('https://slack.com/api/chat.postMessage', {
+            text: message,
+            channel: result.data.channel.id
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+            }
+        }).then(() => ({ statusCode: 200 }));
+    });
+}
+
+export function postMessageBlocks(channel: string, message: string, blocks: any = []): Promise<any> {
+    return axios.post('https://slack.com/api/chat.postMessage', {
+        text: message,
+        channel: channel,
+        blocks: blocks
+    }, {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+        }
+    }).then(() => ({ statusCode: 200 }));
+}
+
+export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
+    const currMonthName = moment().format('MMMM');
+    const prevMonthName = moment().subtract(1, "month").format('MMMM');
+    const initInput = initial ? initial : '';
+    return axios.post('https://slack.com/api/views.open', {
+        trigger_id: trigger,
+        //channel: channel,
+        view: {
+            type: "modal",
+            callback_id: channel ? channel : '',
+            title: {
+                type: "plain_text",
+                text: "OS Contribution",
+                emoji: true
+            },
+            submit: {
+                type: "plain_text",
+                text: "Submit",
+                emoji: true
+            },
+            close: {
+                type: "plain_text",
+                text: "Cancel",
+                emoji: true
+            },
+            blocks: [
+                {
+                    type: "input",
+                    block_id: "desc_input",
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "description",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Description"
+                        },
+                        multiline: true,
+                        min_length: 50,
+                        initial_value: initInput
+                    },
+
+                    label: {
+                        type: "plain_text",
+                        text: "OS Description"
+                    }
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    type: "input",
+                    block_id: "url_input",
+                    element: {
+                        type: "plain_text_input",
+                        action_id: "url",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "OS contribution URL"
+                        }
+                    },
+                    label: {
+                        type: "plain_text",
+                        text: "URL"
+                    }
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    type: "input",
+                    block_id: "comp_month_input",
+                    label: {
+                        type: "plain_text",
+                        text: "Pick compensation month"
+                    },
+                    element: {
+                        type: "static_select",
+                        action_id: "comp_month_val",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select compensation month",
+                            emoji: true
+                        },
+                        options: [
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: currMonthName,
+                                    emoji: true
+                                },
+                                value: "current_mont"
+                            },
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: prevMonthName,
+                                    emoji: true
+                                },
+                                value: "prev_month"
+                            },
+                        ]
+                    }
+                },
+
+                {
+                    type: "divider"
+                },
+                {
+                    type: "input",
+                    block_id: "comp_lvl_input",
+                    label: {
+                        type: "plain_text",
+                        text: "Pick compensation level"
+                    },
+                    element: {
+                        type: "static_select",
+                        action_id: "comp_lvl_val",
+                        placeholder: {
+                            type: "plain_text",
+                            text: "Select compensation level",
+                            emoji: true
+                        },
+                        options: [
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: "No compensation",
+                                    emoji: true
+                                },
+                                value: "no_compensation"
+                            },
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: "Competence development hours",
+                                    emoji: true
+                                },
+                                value: "competence_development"
+                            },
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: ":white_check_mark: Small bonus - 50 € :moneybag:",
+                                    emoji: true
+                                },
+                                value: "small"
+                            },
+                            {
+                                text: {
+                                    type: "plain_text",
+                                    text: ":white_check_mark: Medium bonus - 200 € :moneybag: :moneybag: :moneybag:"
+                                },
+                                value: "medium"
+                            }
+                        ]
+                    }
+                },
+
+            ]
+        }
+    }, {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
+        }
+    }).then(() => ({ statusCode: 200 }));
+}
 /**
  * Deletes given contribution from the dynamodb
  *
  * @param rollbackId
  */
 export function rollbackContribution(rollbackId: string): Promise<LambdaResponse> {
-    if(!rollbackId) {
+    if (!rollbackId) {
         return Promise.resolve({
             statusCode: 200,
             body: JSON.stringify({
@@ -63,14 +264,14 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
             attachments: results.map((item) => {
                 return {
                     fallback: 'fallback',
-                    color: (function(status) {
-                        if(status === 'PENDING') {
+                    color: (function (status) {
+                        if (status === 'PENDING') {
                             return "#ffff00";
                         }
-                        if(status === 'ACCEPTED') {
+                        if (status === 'ACCEPTED') {
                             return "#36a64f";
                         }
-                        if(status === 'DECLINED') {
+                        if (status === 'DECLINED') {
                             return "#ff0000";
                         }
                     })(item.status),
@@ -109,16 +310,26 @@ export function replyWithHelp(): Promise<LambdaResponse> {
     // KLUDGE: environment should be mocked for tests, because Config is fail fast
     let version, environment;
     try {
-      version = Config.get('VERSION');
-      environment = Config.get('ENVIRONMENT');
-    } catch (e) {}
+        version = Config.get('VERSION');
+        environment = Config.get('ENVIRONMENT');
+    } catch (e) { }
     const helpMessage = [
         "*Hi there!*",
         "",
         "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
         "",
+        /*
         "You can send me (Ossitron-2000) a *private message* which describes your contribution. Then I will ask, if you want to submit given contribution. " +
-        "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel about your contribution.",
+        "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel about your contribution.",*/
+        "First use slash command /ossi new and then fill the modal inputs. You can also type the description field after new-word",
+        //"send me (Ossitron-2000) a private message which describes your contribution. Then I will ask, following two separate questions about given contribution:",
+        "",
+        " :black_circle: Description of the contribution",
+        " :black_circle: URL of contribution",
+        " :black_circle: Contribution month",
+        " :black_circle: Contribution compensation from medium_200€/small_50€/no_compensation / competence_development_hours",
+        "",
+        "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel for sanity check your contribution.",
         "",
         "When your contribution gets processed, I will notify you back.", ,
         "",
@@ -128,6 +339,7 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "",
         "`help` shows this help",
         "`list` lists your submitted contributions",
+        "`new #description_here#`  subscribe new contribution",
         "",
         "I'm deployed into :aws-super-hero: AWS Cloud to `eu-north-1` region to Solita Sandbox account. I'm built of Node.js, Typescript, Serverless, Api Gateway, Lambda and DynamoDB.",
         "",
