@@ -4,7 +4,7 @@ import { authLambdaEvent} from "./slack-auth";
 import {listContributions, replyWithHelp} from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
-type SlackSlashCommandPayload = {
+interface SlackSlashCommandPayload {
     text: string;
     user_id: string;
 }

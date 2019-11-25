@@ -43,7 +43,7 @@ export const handleEvent = (event: any) => {
     if (body.event.text.length < 50) {
         return postMessage(body.event.channel,
             'Hmm, that seems bit short description of your Open Source Contribution. Could you elaborate?');
-    } else {
+    } 
         return writeContribution(body.event.user, body.event.text, body.event.channel).then((eventId) => {
             return postMessage(body.event.channel,
                 'Do you want me to submit this one?',
@@ -95,5 +95,5 @@ export const handleEvent = (event: any) => {
                 ]
             )
         });
-    }
+    
 };
