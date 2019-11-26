@@ -74,6 +74,11 @@ functions:
           path: state
           method: post
 
+  monthly-report:
+    handler: src/monthly-report-handler.generateMonthlyReport
+    events:
+      - schedule: rate(15 minutes)
+
   streamFunction:
     handler: src/status-changes-handler.handleStream
     events:
