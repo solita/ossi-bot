@@ -6,7 +6,13 @@ import { Config } from "./shared/config";
 
 import { postMessage, postInstantMessage } from "./shared/slack-interaction";
 const { parse } = require('querystring');
-
+const sizeConstants = {
+    large: 'Marked this contribution to be a large one (this is currently not supported)',
+    medium: `Marked your contribution to be medium. I will get back to you, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`,
+    small: `Marked your contribution to be small. I will get back to you, when your contribution gets processed.  All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`,
+    no_compensation: `Marked your contribution to be no compensation. Even though you did not request for compensation, I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`,
+    competence_development: `Good to know that you use competence development hours for Open Source work. You don't get compensation when using competence development hours for OSS work, but I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
+}
 /**
  * Change state handler is a handler for slack interactive components.
  *
@@ -30,12 +36,18 @@ export const changeState = (event: any) => {
         const url = interaction.view.state.values.url_input.url.value;
         const month = interaction.view.state.values.comp_month_input.comp_month_val.selected_option.value;
         const level = interaction.view.state.values.comp_lvl_input.comp_lvl_val.selected_option.value;
-        return writeContribution(interaction.user.id, desc, channel, level, url, month).then((eventId) => {
-            return postInstantMessage(interaction.user.id, "Subscribed your contribution succesfully!");
+
+        return writeContribution(interaction.user.id, desc, channel, url, month).then((eventId) => {
+            const [id, timestamp] = eventId.split('-');
+            const levelText = level === 'LARGE' ? sizeConstants.large : level === 'MEDIUM' ? sizeConstants.medium : level === 'SMALL' ? sizeConstants.small : level === 'COMPETENCE_DEVELOPMENT' ? sizeConstants.competence_development : sizeConstants.no_compensation;
+            return updateSize(id, timestamp, level)
+                .then(() => {
+                    return postInstantMessage(interaction.user.id, levelText);
+                });
         });
     }
     const [id, timestamp] = interaction.callback_id.split('-');
-    if (interaction.actions[0].value === 'cancel') {
+    /*if (interaction.actions[0].value === 'cancel') {
         return deleteEntry(id, timestamp)
             .then(_ => {
                 return {
@@ -45,7 +57,7 @@ export const changeState = (event: any) => {
                     })
                 }
             });
-    }
+    }*/
 
     if (interaction.actions[0].value === 'large') {
         return updateSize(id, timestamp, 'LARGE')

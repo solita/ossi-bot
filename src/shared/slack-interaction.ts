@@ -58,6 +58,8 @@ export function postMessageBlocks(channel: string, message: string, blocks: any 
 export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
     const currMonthName = moment().format('MMMM');
     const prevMonthName = moment().subtract(1, "month").format('MMMM');
+    // const currentDate = moment().format('YYYY-MM-DD-HH-')
+    // const monthOptions = moment().isBetween(moment()
     const initInput = initial ? initial : '';
     return axios.post('https://slack.com/api/views.open', {
         trigger_id: trigger,
@@ -145,7 +147,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
                                     text: currMonthName,
                                     emoji: true
                                 },
-                                value: "current_mont"
+                                value: "current_month"
                             },
                             {
                                 text: {
@@ -184,7 +186,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
                                     text: "No compensation",
                                     emoji: true
                                 },
-                                value: "no_compensation"
+                                value: "NO_COMPENSATION"
                             },
                             {
                                 text: {
@@ -192,7 +194,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
                                     text: "Competence development hours",
                                     emoji: true
                                 },
-                                value: "competence_development"
+                                value: "COMPETENCE_DEVELOPMENT"
                             },
                             {
                                 text: {
@@ -200,14 +202,14 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
                                     text: ":white_check_mark: Small bonus - 50 € :moneybag:",
                                     emoji: true
                                 },
-                                value: "small"
+                                value: "SMALL"
                             },
                             {
                                 text: {
                                     type: "plain_text",
                                     text: ":white_check_mark: Medium bonus - 200 € :moneybag: :moneybag: :moneybag:"
                                 },
-                                value: "medium"
+                                value: "MEDIUM"
                             }
                         ]
                     }
