@@ -1,8 +1,10 @@
 'use strict';
 
 import { Config } from "./shared/config";
-import * as XLSX from 'xlsx'
-import axios from "axios";
+import * as XLSX from 'xlsx';
+import axios from 'axios';
+
+const FormData = require('form-data');
 
 /**
  * TODO
@@ -20,30 +22,38 @@ export const generateMonthlyReport = (event: any) => {
 
 };
 
-export function postXlsxFile(channel: string, message: string, data: Array<Array<any>): Promise<any> {
+const postXlsxFile = (channel: string, message: string, data: Array<Array<any>>): Promise<any> => {
 
-  
-  const writingOptions: XLSX.WritingOptions =  { bookType:'xlsx', bookSST:false, type:'base64' };
+  const writingOptions: XLSX.WritingOptions =  { bookType:'xlsx', bookSST:false, type:'buffer' };
   const workBook = XLSX.utils.book_new();
   const workSheet = XLSX.utils.aoa_to_sheet(data);
 
   XLSX.utils.book_append_sheet(workBook, workSheet);
   const workBookBlob = XLSX.write(workBook,writingOptions);      
   
+
   const formData = new FormData();
-  formData.append('file', 'test.xlsx');
-  formData.append('data',  workBookBlob);
+  formData.append('token', Config.get('SLACK_TOKEN'))
+  formData.append('filename', 'test.xlsx');
+  formData.append('file', workBookBlob, 'test.xlsx');
+  formData.append('initial_comment', message);
+  formData.append('channels', channel)
+  const formHeaders = formData.getHeaders();
   
-  return axios.post('https://slack.com/api/chat.postMessage', {
-      text: message,
-      channel: channel
-  }, {
-      headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-      },
-      data: formData
-  }).then(() => ({ statusCode: 200 }));
+  return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), {
+    headers: {
+        ...formHeaders,
+        'Authorization': `Bearer ${Config.get('SLACK_TOKEN')}`
+    }
+  })
+  .then((result) => {
+    console.log('Successful')
+    console.log(result)
+    return ({ statusCode: 200 });
+  })
+  .catch(error => {
+    console.error(`Error sending file `, error)
+  })
 }
 
 
