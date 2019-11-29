@@ -21,6 +21,9 @@
     "serverless": "^1.41.1",
     "serverless-plugin-typescript": "^1.1.7",
     "ts-jest": "^24.0.2",
+    "tslint": "^5.20.1",
+    "tslint-config-airbnb": "^5.11.2",
+    "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.4.5"
   },
   "dependencies": {

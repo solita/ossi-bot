@@ -64,7 +64,7 @@ const sendResult = (data: any) => {
         [
             {
                 fallback: 'fallback',
-                color: (function(status) {
+                color: ((status) => {
                     if(status === 'PENDING') {
                         return "#ffff00";
                     }
@@ -101,7 +101,7 @@ const sendToPublicChannel = (data: any) => {
         [
             {
                 fallback: 'fallback',
-                color: (function(status) {
+                color: ((status) => {
                     if(status === 'PENDING') {
                         return "#ffff00";
                     }
