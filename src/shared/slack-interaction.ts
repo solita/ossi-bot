@@ -56,10 +56,31 @@ export function postMessageBlocks(channel: string, message: string, blocks: any 
 }
 
 export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
-    const currMonthName = moment().format('MMMM');
-    const prevMonthName = moment().subtract(1, "month").format('MMMM');
-    // const currentDate = moment().format('YYYY-MM-DD-HH-')
-    // const monthOptions = moment().isBetween(moment()
+    const currMonth = moment().date();
+
+    //if daynumber > 3  then show only current month
+    //if daynumber <= 3 then show current and previous month
+    let optionsBlock = [
+        {
+            text: {
+                type: "plain_text",
+                text: moment().format('YYYY'),
+                emoji: true
+            },
+            value: moment().format('YYYY-MM')
+        }
+    ]
+    if (currMonth <= 3) {
+        optionsBlock.push(
+            {
+                text: {
+                    type: "plain_text",
+                    text: moment().subtract(1, "month").format('YYYY'),
+                    emoji: true
+                },
+                value: moment().subtract(1, "month").format('YYYY-MM')
+            })
+    }
     const initInput = initial ? initial : '';
     return axios.post('https://slack.com/api/views.open', {
         trigger_id: trigger,
@@ -140,24 +161,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
                             text: "Select compensation month",
                             emoji: true
                         },
-                        options: [
-                            {
-                                text: {
-                                    type: "plain_text",
-                                    text: currMonthName,
-                                    emoji: true
-                                },
-                                value: "current_month"
-                            },
-                            {
-                                text: {
-                                    type: "plain_text",
-                                    text: prevMonthName,
-                                    emoji: true
-                                },
-                                value: "prev_month"
-                            },
-                        ]
+                        options: optionsBlock
                     }
                 },
 
