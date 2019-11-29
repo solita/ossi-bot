@@ -74,6 +74,11 @@ functions:
           path: state
           method: post
 
+  monthly-report:
+    handler: src/monthly-report-handler.generateMonthlyReport
+    events:
+      - schedule: cron(0 0 8 3 * ? *)
+
   streamFunction:
     handler: src/status-changes-handler.handleStream
     events:
