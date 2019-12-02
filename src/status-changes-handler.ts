@@ -131,9 +131,6 @@ const sendToPublicChannel = (data: any) => {
 };
 
 export const handleStream = async (event: any) => {
-    // log out the raw event
-    // console.log(JSON.stringify(event, null, 2));
-
     // Don't do anything, if event is item removal or insert
     if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);
@@ -183,6 +180,4 @@ export const handleStream = async (event: any) => {
                 return {message: 'OK'}
             });
     }
-
-
 };

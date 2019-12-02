@@ -31,15 +31,7 @@ export function postInstantMessage(user: string, message: string): Promise<any> 
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
     }).then((result) => {
-        return axios.post('https://slack.com/api/chat.postMessage', {
-            text: message,
-            channel: result.data.channel.id
-        }, {
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-            }
-        }).then(() => ({ statusCode: 200 }));
+        return postMessage(result.data.channel.id, message)
     });
 }
 
