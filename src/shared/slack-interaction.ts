@@ -64,7 +64,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
         {
             text: {
                 type: "plain_text",
-                text: moment().format('YYYY'),
+                text: moment().format('MMMM'),
                 emoji: true
             },
             value: moment().format('YYYY-MM')
@@ -75,7 +75,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
             {
                 text: {
                     type: "plain_text",
-                    text: moment().subtract(1, "month").format('YYYY'),
+                    text: moment().subtract(1, "month").format('MMMM'),
                     emoji: true
                 },
                 value: moment().subtract(1, "month").format('YYYY-MM')
@@ -330,10 +330,10 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "First use slash command /ossi new and then fill the modal inputs. You can also type the description field after new-word",
         //"send me (Ossitron-2000) a private message which describes your contribution. Then I will ask, following two separate questions about given contribution:",
         "",
-        " :black_circle: Description of the contribution",
-        " :black_circle: URL of contribution",
-        " :black_circle: Contribution month",
-        " :black_circle: Contribution compensation from medium_200€/small_50€/no_compensation / competence_development_hours",
+        " * Description of the contribution",
+        " * URL of contribution",
+        " * Contribution month",
+        " * Contribution compensation from medium_200€/small_50€/no_compensation / competence_development_hours",
         "",
         "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel for sanity check your contribution.",
         "",
