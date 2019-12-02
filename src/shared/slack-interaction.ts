@@ -2,6 +2,7 @@ import { deleteEntry, getContributions } from "./dynamo";
 import axios from "axios";
 import * as moment from 'moment-timezone';
 import { Config } from "./config";
+import * as FormData from 'form-data';
 
 export interface LambdaResponse {
     statusCode: number,
@@ -42,18 +43,23 @@ export function postInstantMessage(user: string, message: string): Promise<any> 
     });
 }
 
-export function postMessageBlocks(channel: string, message: string, blocks: any = []): Promise<any> {
-    return axios.post('https://slack.com/api/chat.postMessage', {
-        channel,
-        blocks,
-        text: message
-    }, {
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-        }
-    }).then(() => ({ statusCode: 200 }));
+export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {   
+    const formData = new FormData();
+    formData.append('token', Config.get('SLACK_TOKEN'))
+    formData.append('filename', filename);
+    formData.append('file', fileBuffer, filename);
+    formData.append('initial_comment', message);
+    formData.append('channels', channel)
+
+    return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), { headers: formData.getHeaders() })
+    .then((result) => {
+        console.log('File sent successfully')
+    })
+    .catch(error => {
+        console.error(`Error sending file `, error)
+    });
 }
+  
 
 export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();

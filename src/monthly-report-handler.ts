@@ -6,7 +6,8 @@ import axios from 'axios';
 import { getContributionsForMonth } from './shared/dynamo';
 import * as moment from 'moment-timezone';
 import { Contribution } from "./shared/model";
-import * as FormData from 'form-data';
+import { postFile } from './shared/slack-interaction'
+
 
 /**
  * Fetches all contributions for previous month, puts data to Excel and sends it to management Slack channel
@@ -20,8 +21,6 @@ export const generateMonthlyReport = () => {
     const dataToSend = contributions
       .filter(contribution => contribution.status === 'ACCEPTED')    
       .reduce((all, contribution: Contribution) => all.concat(toContributionRowTable(contribution)), headerRowTable);
-
-    console.log(dataToSend);
 
     postXlsxFile(Config.get('MANAGEMENT_CHANNEL'), 'This is the monthly report', dataToSend)
   })
@@ -38,23 +37,9 @@ const toContributionRowTable = (contribution: Contribution) => [[
 ]]
 
 const postXlsxFile = (channel: string, message: string, data: any[][]) => {
-   
   const xlsxBuffer = writeToXlsxBuffer(data);
 
-  const formData = new FormData();
-  formData.append('token', Config.get('SLACK_TOKEN'))
-  formData.append('filename', 'test.xlsx');
-  formData.append('file', xlsxBuffer, 'test.xlsx');
-  formData.append('initial_comment', message);
-  formData.append('channels', channel)
-  
-  return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), { headers: formData.getHeaders() })
-  .then((result) => {
-    console.log('Successful')
-  })
-  .catch(error => {
-    console.error(`Error sending file `, error)
-  });
+  postFile(channel, message, xlsxBuffer, 'test.xlsx');
 }
 
 const writeToXlsxBuffer = (data: any[][]) => {
