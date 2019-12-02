@@ -2,11 +2,10 @@
 
 import { Config } from "./shared/config";
 import * as XLSX from 'xlsx';
-import axios from 'axios';
 import { getContributionsForMonth } from './shared/dynamo';
 import * as moment from 'moment-timezone';
 import { Contribution } from "./shared/model";
-import { postFile } from './shared/slack-interaction'
+import { postFile } from './shared/slack-interaction'
 
 
 /**
