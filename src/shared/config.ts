@@ -5,7 +5,8 @@ export type ConfigKeys =
     'PUBLIC_CHANNEL' | // Public channel to send accepted contributions
     'VERSION' | // version of the deployment
     'ENVIRONMENT' | // environment of the deployment
-    'DYNAMO_TABLE' // dynamo db table name in environment
+    'DYNAMO_TABLE' | // dynamo db table name in environment
+    'DYNAMO_GSI' // dynamo db global secondary index name in environment
     ;
 
 export class Config {

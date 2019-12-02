@@ -3,57 +3,70 @@
 import { Config } from "./shared/config";
 import * as XLSX from 'xlsx';
 import axios from 'axios';
-
-const FormData = require('form-data');
+import { getContributionsForMonth } from './shared/dynamo';
+import * as moment from 'moment-timezone';
+import { Contribution } from "./shared/model";
+import * as FormData from 'form-data';
 
 /**
- * TODO
- *
- * @param event
+ * Fetches all contributions for previous month, puts data to Excel and sends it to management Slack channel
  */
-export const generateMonthlyReport = (event: any) => {
-    
-  const data = [
-    ['Raportoijan slack-id', 'Kohdekuukausi', 'Raportin aikaleima', 'Nimi', 'Kompensaatio', 'Description', 'URL'],
-    ['Olli Sorje', 'November', '2019-11-25', 'Olli Sorje', 'SMALL', 'Hieno kuvausteksti', 'http://google.fi']
-  ]
-  
-  postXlsxFile(Config.get('MANAGEMENT_CHANNEL'), 'This is the monthly report', data)
+export const generateMonthlyReport = () => {
+  const contributionMonthForReport = moment().subtract(1, "month").format('YYYY-MM');  
 
-};
+  getContributionsForMonth(contributionMonthForReport).then(contributions => {
+    const headerRowTable = [['Raportoijan slack-id', 'Kohdekuukausi', 'Raportin aikaleima', 'Nimi', 'Kompensaatio', 'Description', 'URL']];
 
-const postXlsxFile = (channel: string, message: string, data: Array<Array<any>>): Promise<any> => {
+    const dataToSend = contributions
+      .filter(contribution => contribution.status === 'ACCEPTED')    
+      .reduce((all, contribution: Contribution) => all.concat(toContributionRowTable(contribution)), headerRowTable);
 
-  const writingOptions: XLSX.WritingOptions =  { bookType:'xlsx', bookSST:false, type:'buffer' };
-  const workBook = XLSX.utils.book_new();
-  const workSheet = XLSX.utils.aoa_to_sheet(data);
+    console.log(dataToSend);
 
-  XLSX.utils.book_append_sheet(workBook, workSheet);
-  const workBookBlob = XLSX.write(workBook,writingOptions);      
-  
+    postXlsxFile(Config.get('MANAGEMENT_CHANNEL'), 'This is the monthly report', dataToSend)
+  })
+}
+
+const toContributionRowTable = (contribution: Contribution) => [[
+  String(contribution.id) , 
+  String(contribution.contributionMonth), 
+  moment(contribution.timestamp).tz('Europe/Helsinki').format('YYYY-MM-DD HH:mm:ss'), 
+  String(contribution.username), 
+  String(contribution.size), 
+  String(contribution.text), 
+  String(contribution.url)
+]]
+
+const postXlsxFile = (channel: string, message: string, data: Array<Array<any>>) => {
+   
+  const xlsxBuffer = writeToXlsxBuffer(data);
 
   const formData = new FormData();
   formData.append('token', Config.get('SLACK_TOKEN'))
   formData.append('filename', 'test.xlsx');
-  formData.append('file', workBookBlob, 'test.xlsx');
+  formData.append('file', xlsxBuffer, 'test.xlsx');
   formData.append('initial_comment', message);
   formData.append('channels', channel)
   const formHeaders = formData.getHeaders();
   
   return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), {
     headers: {
-        ...formHeaders,
-        'Authorization': `Bearer ${Config.get('SLACK_TOKEN')}`
+        ...formHeaders
     }
   })
   .then((result) => {
     console.log('Successful')
-    console.log(result)
-    return ({ statusCode: 200 });
   })
   .catch(error => {
     console.error(`Error sending file `, error)
-  })
+  });
 }
 
+const writeToXlsxBuffer = (data: Array<Array<any>>) => {
+  const writingOptions: XLSX.WritingOptions =  { bookType:'xlsx', bookSST:false, type:'buffer' };
+  const workBook = XLSX.utils.book_new();
+  const workSheet = XLSX.utils.aoa_to_sheet(data);
 
+  XLSX.utils.book_append_sheet(workBook, workSheet);
+  return XLSX.write(workBook,writingOptions);     
+}

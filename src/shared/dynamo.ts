@@ -18,6 +18,19 @@ export const getContributions = (id: string): Promise<Contribution[]> => {
         .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
 };
 
+export const getContributionsForMonth = (contributionMonth: string): Promise<Contribution[]> => {
+    var params = {
+        TableName: Config.get('DYNAMO_TABLE'),
+        IndexName: Config.get('DYNAMO_GSI'),
+        ExpressionAttributeValues: {
+            ':contributionMonth': contributionMonth
+        },
+        KeyConditionExpression: 'contributionMonth = :contributionMonth',
+    };
+    return ddb.query(params).promise()
+        .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
+};
+
 export const getContribution = (id: string, timestamp: string) => {
     var params = {
         TableName: Config.get('DYNAMO_TABLE'),
