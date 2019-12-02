@@ -7,7 +7,7 @@ import { Contribution, Status, Size } from "./model";
 const ddb = new DynamoDB.DocumentClient({ apiVersion: '2012-08-10' });
 
 export const getContributions = (id: string): Promise<Contribution[]> => {
-    var params = {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         ExpressionAttributeValues: {
             ':id': id
@@ -32,7 +32,7 @@ export const getContributionsForMonth = (contributionMonth: string): Promise<Con
 };
 
 export const getContribution = (id: string, timestamp: string) => {
-    var params = {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         ExpressionAttributeValues: {
             ':id': id,
@@ -48,22 +48,21 @@ export const getContribution = (id: string, timestamp: string) => {
 };
 
 export const deleteEntry = (id: string, timestamp: string) => {
-    var params = {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Key: {
-            id: id,
+            id,
             timestamp: parseInt(timestamp)
         }
     };
     return ddb.delete(params).promise();
 };
 
-export const updateState = (id: string, timestamp: string,
-    state: Status) => {
-    var params = {
+export const updateState = (id: string, timestamp: string, state: Status) => {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Key: {
-            id: id,
+            id,
             timestamp: parseInt(timestamp)
         },
         ExpressionAttributeNames: { '#status': 'status' },
@@ -75,12 +74,11 @@ export const updateState = (id: string, timestamp: string,
     return ddb.update(params).promise();
 };
 
-export const updateSize = (id: string, timestamp: string,
-    size: Size) => {
-    var params = {
+export const updateSize = (id: string, timestamp: string, size: Size ) => {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Key: {
-            id: id,
+            id,
             timestamp: parseInt(timestamp)
         },
         ExpressionAttributeNames: { '#size': 'size', '#status': 'status' },
@@ -102,7 +100,7 @@ export const writeContribution = async (id: string, text: string, privateChannel
             }
         });
     const timestamp = moment().valueOf();
-    var params = {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Item: {
             'id': id,

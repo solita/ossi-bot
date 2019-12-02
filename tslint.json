@@ -20,7 +20,8 @@
         "no-var-requires": false,
         "no-irregular-whitespace": true,
         "max-classes-per-file": false,
-        "prefer-array-literal": [true, { "allow-type-parameters": true }]
+        "prefer-array-literal": [true, { "allow-type-parameters": true }],
+        "radix": false
     },
     "rulesDirectory": []
 }

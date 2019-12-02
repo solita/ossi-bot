@@ -1,6 +1,6 @@
 export type ConfigKeys =
     'SLACK_SIGNING_SECRET' | // Slack signing secret used to verify incoming requests
-    'SLACK_TOKEN' | // Slack token for posting messages back
+    'SLACK_TOKEN' | // Slack token for posting messages back
     'MANAGEMENT_CHANNEL' | // Management channel ID
     'PUBLIC_CHANNEL' | // Public channel to send accepted contributions
     'VERSION' | // version of the deployment

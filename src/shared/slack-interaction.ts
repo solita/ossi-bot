@@ -3,16 +3,16 @@ import axios from "axios";
 import * as moment from 'moment-timezone';
 import { Config } from "./config";
 
-export type LambdaResponse = {
+export interface LambdaResponse {
     statusCode: number,
     body: string
 }
 
 export function postMessage(channel: string, message: string, attachments: any = []): Promise<any> {
     return axios.post('https://slack.com/api/chat.postMessage', {
-        text: message,
-        channel: channel,
-        attachments: attachments
+        attachments,
+        channel,
+        text: message
     }, {
         headers: {
             "Content-Type": "application/json",
@@ -270,8 +270,8 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
             attachments: results.map((item) => {
                 return {
                     fallback: 'fallback',
-                    color: (function (status) {
-                        if (status === 'PENDING') {
+                    color: ((status) => {
+                        if(status === 'PENDING') {
                             return "#ffff00";
                         }
                         if (status === 'ACCEPTED') {
@@ -314,11 +314,16 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
  */
 export function replyWithHelp(): Promise<LambdaResponse> {
     // KLUDGE: environment should be mocked for tests, because Config is fail fast
-    let version, environment;
+    let version;
+    let environment;
+
     try {
-        version = Config.get('VERSION');
-        environment = Config.get('ENVIRONMENT');
-    } catch (e) { }
+      version = Config.get('VERSION');
+      environment = Config.get('ENVIRONMENT');
+    } catch (e) {
+        console.error("Something went wrong with fetching config", e);
+    }
+
     const helpMessage = [
         "*Hi there!*",
         "",
