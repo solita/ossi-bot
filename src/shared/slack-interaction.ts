@@ -56,7 +56,7 @@ export function postMessageBlocks(channel: string, message: string, blocks: any 
 }
 
 export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
-    const currMonth = moment().date();
+    const currentDayOfMonth = moment().date();
 
     // if daynumber > 3  then show only current month
     // if daynumber <= 3 then show current and previous month
@@ -70,7 +70,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
             value: moment().format('YYYY-MM')
         }
     ]
-    if (currMonth <= 3) {
+    if (currentDayOfMonth <= 3) {
         optionsBlock.push(
             {
                 text: {
@@ -82,9 +82,9 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
             })
     }
     const initInput = initial ? initial : '';
+
     return axios.post('https://slack.com/api/views.open', {
         trigger_id: trigger,
-        // channel: channel,
         view: {
             type: "modal",
             callback_id: channel ? channel : '',
@@ -329,11 +329,7 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "",
         "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
         "",
-        /*
-        "You can send me (Ossitron-2000) a *private message* which describes your contribution. Then I will ask, if you want to submit given contribution. " +
-        "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel about your contribution.",*/
         "First use slash command /ossi new and then fill the modal inputs. You can also type the description field after new-word",
-        // "send me (Ossitron-2000) a private message which describes your contribution. Then I will ask, following two separate questions about given contribution:",
         "",
         " * Description of the contribution",
         " * URL of contribution",
