@@ -47,13 +47,8 @@ const postXlsxFile = (channel: string, message: string, data: Array<Array<any>>)
   formData.append('file', xlsxBuffer, 'test.xlsx');
   formData.append('initial_comment', message);
   formData.append('channels', channel)
-  const formHeaders = formData.getHeaders();
   
-  return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), {
-    headers: {
-        ...formHeaders
-    }
-  })
+  return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), { headers: formData.getHeaders() })
   .then((result) => {
     console.log('Successful')
   })
