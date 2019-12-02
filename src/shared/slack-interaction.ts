@@ -226,33 +226,6 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
         }
     }).then(() => ({ statusCode: 200 }));
 }
-/**
- * Deletes given contribution from the dynamodb
- *
- * @param rollbackId
- */
-export function rollbackContribution(rollbackId: string): Promise<LambdaResponse> {
-    if (!rollbackId) {
-        return Promise.resolve({
-            statusCode: 200,
-            body: JSON.stringify({
-                "response_type": "ephemeral",
-                "text": "Pass rollback id to delete entry"
-            })
-        });
-    }
-    const [id, seq] = rollbackId.split('-');
-    return deleteEntry(id, seq)
-        .then(() => {
-            return Promise.resolve({
-                statusCode: 200,
-                body: JSON.stringify({
-                    "response_type": "ephemeral",
-                    "text": `OK, I deleted your contribution with ID: ${rollbackId}`
-                })
-            });
-        })
-}
 
 /**
  * Lists users contributions.

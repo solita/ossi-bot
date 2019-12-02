@@ -1,5 +1,5 @@
-import {listContributions, replyWithHelp, rollbackContribution} from "./slack-interaction";
-import {Contribution} from "./model";
+import { listContributions, replyWithHelp } from "./slack-interaction";
+import { Contribution } from "./model";
 const dynamo = require('./dynamo');
 
 
@@ -11,14 +11,6 @@ describe('slack-interaction.ts', () => {
                 statusCode: 200,
                 body: expect.stringContaining('Ossi')
             });
-        })
-    });
-
-    describe('rollbackContribution()', () => {
-        it('Should call deleteEntry from dynamo', async () => {
-            dynamo.deleteEntry = jest.fn(() => Promise.resolve());
-            await rollbackContribution('abc-42');
-            expect(dynamo.deleteEntry).toBeCalledWith('abc', '42');
         })
     });
 
