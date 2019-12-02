@@ -1,4 +1,4 @@
-import { deleteEntry, getContributions } from "./dynamo";
+import { getContributions } from "./dynamo";
 import axios from "axios";
 import * as moment from 'moment-timezone';
 import { Config } from "./config";
