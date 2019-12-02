@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { listContributions, replyWithHelp, postModalBlock, postMessage } from "./shared/slack-interaction";
+import { listContributions, replyWithHelp, postModalBlock } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
 interface SlackSlashCommandPayload {

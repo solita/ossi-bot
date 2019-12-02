@@ -1,10 +1,10 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { deleteEntry, updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
+import { updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
 import { Config } from "./shared/config";
 
-import { postMessage, postInstantMessage } from "./shared/slack-interaction";
+import { postInstantMessage } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 const sizeConstants = {
     large: 'Marked this contribution to be a large one (this is currently not supported)',
@@ -38,27 +38,16 @@ export const changeState = (event: any) => {
         const level = interaction.view.state.values.comp_lvl_input.comp_lvl_val.selected_option.value;
 
         return writeContribution(interaction.user.id, desc, channel, url, month).then((eventId) => {
-            const [id, timestamp] = eventId.split('-');
+            const [contributionId, contributionTimestamp] = eventId.split('-');
             const levelText = level === 'LARGE' ? sizeConstants.large : level === 'MEDIUM' ? sizeConstants.medium : level === 'SMALL' ? sizeConstants.small : level === 'COMPETENCE_DEVELOPMENT' ? sizeConstants.competence_development : sizeConstants.no_compensation;
-            return updateSize(id, timestamp, level)
+            return updateSize(contributionId, contributionTimestamp, level)
                 .then(() => {
                     return postInstantMessage(interaction.user.id, levelText);
                 });
         });
     }
     const [id, timestamp] = interaction.callback_id.split('-');
-    /*if (interaction.actions[0].value === 'cancel') {
-        return deleteEntry(id, timestamp)
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: 'Ok - I deleted your submitted text. Feel free to send a new one.'
-                    })
-                }
-            });
-    }*/
-
+    
     if (interaction.actions[0].value === 'large') {
         return updateSize(id, timestamp, 'LARGE')
             .then(_ => {

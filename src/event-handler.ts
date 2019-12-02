@@ -1,8 +1,7 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { writeContribution } from './shared/dynamo';
-import { postMessage, postModalBlock, replyWithHelp } from "./shared/slack-interaction";
+import { replyWithHelp } from "./shared/slack-interaction";
 
 /**
  * Event handler listens to private conversations between solitan and Ossi.

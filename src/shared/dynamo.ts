@@ -19,7 +19,7 @@ export const getContributions = (id: string): Promise<Contribution[]> => {
 };
 
 export const getContributionsForMonth = (contributionMonth: string): Promise<Contribution[]> => {
-    var params = {
+    const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         IndexName: Config.get('DYNAMO_GSI'),
         ExpressionAttributeValues: {

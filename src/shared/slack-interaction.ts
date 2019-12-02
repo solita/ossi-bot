@@ -23,7 +23,7 @@ export function postMessage(channel: string, message: string, attachments: any =
 
 export function postInstantMessage(user: string, message: string): Promise<any> {
     return axios.post('https://slack.com/api/im.open', {
-        user: user
+        user
     }, {
         headers: {
             "Content-Type": "application/json",
@@ -44,9 +44,9 @@ export function postInstantMessage(user: string, message: string): Promise<any> 
 
 export function postMessageBlocks(channel: string, message: string, blocks: any = []): Promise<any> {
     return axios.post('https://slack.com/api/chat.postMessage', {
-        text: message,
-        channel: channel,
-        blocks: blocks
+        channel,
+        blocks,
+        text: message
     }, {
         headers: {
             "Content-Type": "application/json",
@@ -58,9 +58,9 @@ export function postMessageBlocks(channel: string, message: string, blocks: any 
 export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
     const currMonth = moment().date();
 
-    //if daynumber > 3  then show only current month
-    //if daynumber <= 3 then show current and previous month
-    let optionsBlock = [
+    // if daynumber > 3  then show only current month
+    // if daynumber <= 3 then show current and previous month
+    const optionsBlock = [
         {
             text: {
                 type: "plain_text",
@@ -84,7 +84,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
     const initInput = initial ? initial : '';
     return axios.post('https://slack.com/api/views.open', {
         trigger_id: trigger,
-        //channel: channel,
+        // channel: channel,
         view: {
             type: "modal",
             callback_id: channel ? channel : '',
@@ -333,7 +333,7 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "You can send me (Ossitron-2000) a *private message* which describes your contribution. Then I will ask, if you want to submit given contribution. " +
         "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel about your contribution.",*/
         "First use slash command /ossi new and then fill the modal inputs. You can also type the description field after new-word",
-        //"send me (Ossitron-2000) a private message which describes your contribution. Then I will ask, following two separate questions about given contribution:",
+        // "send me (Ossitron-2000) a private message which describes your contribution. Then I will ask, following two separate questions about given contribution:",
         "",
         " * Description of the contribution",
         " * URL of contribution",

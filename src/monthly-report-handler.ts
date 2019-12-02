@@ -37,7 +37,7 @@ const toContributionRowTable = (contribution: Contribution) => [[
   String(contribution.url)
 ]]
 
-const postXlsxFile = (channel: string, message: string, data: Array<Array<any>>) => {
+const postXlsxFile = (channel: string, message: string, data: any[][]) => {
    
   const xlsxBuffer = writeToXlsxBuffer(data);
 
@@ -57,7 +57,7 @@ const postXlsxFile = (channel: string, message: string, data: Array<Array<any>>)
   });
 }
 
-const writeToXlsxBuffer = (data: Array<Array<any>>) => {
+const writeToXlsxBuffer = (data: any[][]) => {
   const writingOptions: XLSX.WritingOptions =  { bookType:'xlsx', bookSST:false, type:'buffer' };
   const workBook = XLSX.utils.book_new();
   const workSheet = XLSX.utils.aoa_to_sheet(data);
