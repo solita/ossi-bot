@@ -56,8 +56,8 @@ export function postFile(channel: string, message: string, fileBuffer: Buffer, f
 export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();
 
-    // if daynumber > 3  then show only current month
-    // if daynumber <= 3 then show current and previous month
+    // if daynumber => 3  then show only current month
+    // if daynumber < 3 then show current and previous month
     const optionsBlock = [
         {
             text: {
@@ -68,7 +68,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
             value: moment().format('YYYY-MM')
         }
     ]
-    if (currentDayOfMonth <= 3) {
+    if (currentDayOfMonth < 3) {
         optionsBlock.push(
             {
                 text: {
