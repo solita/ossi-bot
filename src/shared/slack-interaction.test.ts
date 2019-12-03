@@ -1,16 +1,13 @@
-import { listContributions, replyWithHelp } from "./slack-interaction";
+import { listContributions, getHelpMessage } from "./slack-interaction";
 import { Contribution } from "./model";
 const dynamo = require('./dynamo');
 
 
 describe('slack-interaction.ts', () => {
 
-    describe('replyWithHelp()', () => {
+    describe('getHelpMessage()', () => {
         it('Should resolve values from environment', () => {
-            return expect(replyWithHelp()).resolves.toMatchObject({
-                statusCode: 200,
-                body: expect.stringContaining('Ossi')
-            });
+            return expect(getHelpMessage()).toEqual(expect.stringContaining('Ossi'))
         })
     });
 

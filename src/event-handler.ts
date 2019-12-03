@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { replyWithHelp } from "./shared/slack-interaction";
+import { getHelpMessage, postMessage } from "./shared/slack-interaction";
 
 /**
  * Event handler listens to private conversations between solitan and Ossi.
@@ -38,5 +38,6 @@ export const handleEvent = (event: any) => {
         console.info(JSON.stringify(body, null, 2));
         return Promise.resolve({ statusCode: 200 });
     }
-    return replyWithHelp();
+
+    return postMessage(body.event.channel, getHelpMessage());
 };

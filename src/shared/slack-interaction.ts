@@ -280,10 +280,7 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     });
 }
 
-/**
- * Replies with help text
- */
-export function replyWithHelp(): Promise<LambdaResponse> {
+export function getHelpMessage(): string {
     // KLUDGE: environment should be mocked for tests, because Config is fail fast
     let version;
     let environment;
@@ -325,8 +322,5 @@ export function replyWithHelp(): Promise<LambdaResponse> {
         "_My source code_: https://github.com/solita/ossi-bot",
         `_Deployment_: ${version} ${environment}`
     ].join('\n');
-    return Promise.resolve({
-        statusCode: 200,
-        body: helpMessage
-    })
+    return helpMessage;
 }

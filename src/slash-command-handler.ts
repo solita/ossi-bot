@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { listContributions, replyWithHelp, postModalBlock } from "./shared/slack-interaction";
+import { listContributions, getHelpMessage, postModalBlock, LambdaResponse } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
 interface SlackSlashCommandPayload {
@@ -49,4 +49,14 @@ export const handleSlashCommand = (event: any) => {
 
     return replyWithHelp();
 };
+
+/**
+ * Replies with help text
+ */
+const replyWithHelp = (): Promise<LambdaResponse> => {
+    return Promise.resolve({
+        statusCode: 200,
+        body: getHelpMessage()
+    })
+}
 
