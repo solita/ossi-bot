@@ -28,7 +28,6 @@ describe('slack-interaction.ts', () => {
                 return Promise.resolve([{
                     id: 'abc',
                     timestamp: 1,
-                    privateChannel: '123',
                     size: 'SMALL',
                     status: 'PENDING',
                     text: 'This is my contribution',

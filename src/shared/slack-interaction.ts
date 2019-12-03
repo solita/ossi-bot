@@ -22,7 +22,7 @@ export function postMessage(channel: string, message: string, attachments: any =
     }).then(() => ({ statusCode: 200 }));
 }
 
-export function postInstantMessage(user: string, message: string): Promise<any> {
+export function postInstantMessage(user: string, message: string, attachments: any = []): Promise<any> {
     return axios.post('https://slack.com/api/im.open', {
         user
     }, {
@@ -31,7 +31,7 @@ export function postInstantMessage(user: string, message: string): Promise<any> 
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
     }).then((result) => {
-        return postMessage(result.data.channel.id, message)
+        return postMessage(result.data.channel.id, message, attachments)
     });
 }
 

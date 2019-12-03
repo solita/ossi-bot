@@ -1,5 +1,5 @@
 import {Config} from "./shared/config";
-import {postMessage} from "./shared/slack-interaction";
+import {postMessage, postInstantMessage} from "./shared/slack-interaction";
 import * as moment from "moment-timezone";
 
 const sendNotificationToManagementChannel = (data: any) => {
@@ -57,9 +57,9 @@ const sendNotificationToManagementChannel = (data: any) => {
 };
 
 const sendResult = (data: any) => {
-    console.log(`Sending notification to private channel ${data.privateChannel.S} for ${data.id.S}-${data.timestamp.N}`);
-    return postMessage(
-        data.privateChannel.S,
+    console.log(`Sending notification with instant message for ${data.id.S}-${data.timestamp.N}`);
+    return postInstantMessage(
+        data.id.S,
         `Your contribution got processed!`,
         [
             {

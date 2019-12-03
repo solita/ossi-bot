@@ -31,7 +31,6 @@ Setting up the Slack application is the hardest part in deployment.
 
 Contributions are stored to AWS DynamoDB using partition key `userId` and sort key `timestamp`. On top of keys, a row contains the following data:
 
-* privateChannel - identifier of the private channel between Ossi Bot and contribution sender, used for sending personal notifications back
 * size - size marker of the contribution
 * text - submitted contribution text
 * name - name of the contributor resolved via Slack API

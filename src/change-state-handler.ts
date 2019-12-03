@@ -32,12 +32,11 @@ export const changeState = (event: any) => {
     if (interaction.type === 'view_submission') {
 
         const desc = interaction.view.state.values.desc_input.description.value;
-        const channel = interaction.view.callback_id || null;
         const url = interaction.view.state.values.url_input.url.value;
         const month = interaction.view.state.values.comp_month_input.comp_month_val.selected_option.value;
         const level = interaction.view.state.values.comp_lvl_input.comp_lvl_val.selected_option.value;
 
-        return writeContribution(interaction.user.id, desc, channel, url, month).then((eventId) => {
+        return writeContribution(interaction.user.id, desc, url, month).then((eventId) => {
             const [contributionId, contributionTimestamp] = eventId.split('-');
             const levelText = level === 'LARGE' ? sizeConstants.large : level === 'MEDIUM' ? sizeConstants.medium : level === 'SMALL' ? sizeConstants.small : level === 'COMPETENCE_DEVELOPMENT' ? sizeConstants.competence_development : sizeConstants.no_compensation;
             return updateSize(contributionId, contributionTimestamp, level)
