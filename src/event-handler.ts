@@ -6,8 +6,6 @@ import { getHelpMessage, postMessage } from "./shared/slack-interaction";
 /**
  * Event handler listens to private conversations between solitan and Ossi.
  *
- * This is the handler, that registers new contributions.
- *
  * @param event
  */
 export const handleEvent = (event: any) => {
