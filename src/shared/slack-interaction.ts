@@ -236,7 +236,7 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     return getContributions(userId).then((results) => {
         const response = {
             text: results.length === 0 ?
-                'You do not have any contributions. Submit one by sending a private message to Ossitron-2000!' :
+                'You do not have any contributions. Submit one by using the slash-command /ossi new!' :
                 'Here is the listing of your open source contribution submissions',
             attachments: results.map((item) => {
                 return {
