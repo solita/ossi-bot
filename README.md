@@ -36,6 +36,8 @@ Contributions are stored to AWS DynamoDB using partition key `userId` and sort k
 * text - submitted contribution text
 * name - name of the contributor resolved via Slack API
 * status
+* url - URL of the contribution
+* contributionMonth - The contribution month in YYYY-MM-format
 
 **Statuses**
 
