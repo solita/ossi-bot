@@ -136,7 +136,7 @@ export const changeState = (event: any) => {
                     return {
                         statusCode: 200,
                         body: JSON.stringify({
-                            text: 'This contribution was deleted. This means that contributor has called rollback for the contribution. No message was sent to contributor.'
+                            text: 'This contribution was deleted. No message was sent to contributor.'
                         })
                     }
                 });
@@ -177,7 +177,7 @@ export const changeState = (event: any) => {
                     return {
                         statusCode: 200,
                         body: JSON.stringify({
-                            text: 'This contribution was deleted. This means that contributor has called rollback for the contribution. No message was sent to contributor.'
+                            text: 'This contribution was deleted. No message was sent to contributor.'
                         })
                     }
                 });
