@@ -3,7 +3,7 @@
 Ossi is a slack bot for registering Open Source Contributions in Solita. Ossi offers slash commands, subscribes to events and interacts with interactive components.
 
 1. Read the instructions in slack using slash command `/ossi`
-2. Send a private message to Ossi bot user which describes contribution
+2. Use slash command `/ossi new` and then fill the modal inputs. You can also type the description field after new-word.
 3. Message will be posted to private channel for sanity check
 4. If contribution is accepted, a confirmation is sent and public channel is notified about this contribution
 5. If contribution is declined, only sender is notified
