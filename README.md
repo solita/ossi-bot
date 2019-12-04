@@ -42,7 +42,7 @@ Contributions are stored to AWS DynamoDB using partition key `userId` and sort k
 
 | Status          | Explanation                                                                    |
 | --------------- | ------------------------------------------------------------------------------ |
-| INITIAL         | Initial status when Ossi asks back "do you wan't to submit this contribution?" |
+| INITIAL         | Initial status when contribution is written to DynamoDB                        |
 | PENDING         | Pending sanity check from management channel                                   |
 | ACCEPTED        | Accepted contribution                                                          |
 | DECLINED        | Declined contribution - only used for bogus and invalid submissions            |
@@ -51,7 +51,7 @@ Contributions are stored to AWS DynamoDB using partition key `userId` and sort k
 
 | From       | To       | Stream Action                                                         |
 | ---------- | -------- | --------------------------------------------------------------------- |
-| INITIAL    | PENDING  | Send notification to management channel                               |
+| INITIAL    | PENDING  | Send notification to management channel and private notification to submitter. |
 | PENDING    | ACCEPTED | Notification to public channel and private notification to submitter  |
 | PENDING    | DECLINED | Private notification to submitter                                     |
 
