@@ -53,7 +53,7 @@ export function postFile(channel: string, message: string, fileBuffer: Buffer, f
 }
   
 
-export function postModalBlock(trigger: any, initial?: string, channel?: string): Promise<any> {
+export function postModalBlock(trigger: any, initialMessage?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();
 
     // if daynumber => 3  then show only current month
@@ -79,7 +79,7 @@ export function postModalBlock(trigger: any, initial?: string, channel?: string)
                 value: moment().subtract(1, "month").format('YYYY-MM')
             })
     }
-    const initInput = initial ? initial : '';
+    const initInput = initialMessage ? initialMessage : '';
 
     return axios.post('https://slack.com/api/views.open', {
         trigger_id: trigger,
@@ -308,7 +308,7 @@ export function getHelpMessage(): string {
         "",
         "When your contribution gets processed, I will notify you back.", ,
         "",
-        "If you have questions about the process contact Valtteri Valovirta. If I'm broken contact Juho Friman.",
+        "If you have questions about the process contact Valtteri Valovirta. If I'm broken contact Juho Friman, Ville Virtanen or Olli Sorje.",
         "",
         "I have additional features under this slash command. My slash commands are all _ephemeral_ which means only you see the results. So feel free to shoot slash commands at any channel.",
         "",
