@@ -28,7 +28,7 @@ export const changeState = (event: any) => {
         })
     }
     const interaction = JSON.parse(parse(event.body).payload);
-    console.log("EVENT ON:", interaction);
+
     if (interaction.type === 'view_submission') {
 
         const desc = interaction.view.state.values.desc_input.description.value;
