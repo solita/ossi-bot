@@ -2,12 +2,28 @@ import { listContributions, getHelpMessage } from "./slack-interaction";
 import { Contribution } from "./model";
 const dynamo = require('./dynamo');
 
-
 describe('slack-interaction.ts', () => {
+
+    const OLD_ENV = process.env;
+
+    beforeEach(() => {
+      jest.resetModules() // this is important - it clears the cache
+      process.env = { ...OLD_ENV };
+      delete process.env.NODE_ENV;
+      process.env.VERSION = 'TEST-VERSION';
+      process.env.ENVIRONMENT = 'UNIT-TEST';
+    });
+
+    afterEach(() => {
+      process.env = OLD_ENV;
+    });
 
     describe('getHelpMessage()', () => {
         it('Should resolve values from environment', () => {
-            return expect(getHelpMessage()).toEqual(expect.stringContaining('Ossi'))
+            const helpMessage = getHelpMessage()
+            expect(helpMessage).toEqual(expect.stringContaining('Ossi'));
+            expect(helpMessage).toEqual(expect.stringContaining('TEST-VERSION'));
+            expect(helpMessage).toEqual(expect.stringContaining('UNIT-TEST'));
         })
     });
 
