@@ -1,7 +1,7 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { postMessage } from "./shared/slack-interaction";
+import { postMessage, slackMessageFromLines } from "./shared/slack-interaction";
 
 /**
  * Event handler listens to private conversations between solitan and Ossi.
@@ -33,14 +33,14 @@ export const handleEvent = (event: any) => {
 
     // As of december 2019, we don't talk directly to Ossi anymore
     // Just return a help message, that informs user to use `/ossi new`
-    const botResponse = [
+    const botResponse = slackMessageFromLines([
         "*I have been improved!*",
         "",
         "I dont anymore read your contributions from direct messages.",
         "Instead, plese use `/ossi new` command in any channel. This command opens a neat modal for you to create contribution.",
         "",
         "Have fun!"
-    ].join('\n');
+    ]);
 
     return postMessage(body.event.channel, botResponse);
 };

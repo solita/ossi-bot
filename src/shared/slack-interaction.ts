@@ -35,7 +35,7 @@ export function postInstantMessage(user: string, message: string, attachments: a
     });
 }
 
-export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {   
+export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {
     const formData = new FormData();
     formData.append('token', Config.get('SLACK_TOKEN'))
     formData.append('filename', filename);
@@ -51,7 +51,7 @@ export function postFile(channel: string, message: string, fileBuffer: Buffer, f
         console.error(`Error sending file `, error)
     });
 }
-  
+
 
 export function postModalBlock(trigger: any, initialMessage?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();
@@ -280,19 +280,12 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     });
 }
 
+export function slackMessageFromLines(lines: string[]): string {
+  return lines.join('\n');
+}
+
 export function getHelpMessage(): string {
-    // KLUDGE: environment should be mocked for tests, because Config is fail fast
-    let version;
-    let environment;
-
-    try {
-      version = Config.get('VERSION');
-      environment = Config.get('ENVIRONMENT');
-    } catch (e) {
-        console.error("Something went wrong with fetching config", e);
-    }
-
-    const helpMessage = [
+    const helpMessage = slackMessageFromLines([
         "*Hi there!*",
         "",
         "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
@@ -320,7 +313,7 @@ export function getHelpMessage(): string {
         "",
         "_Information about the policy_: https://intra.solita.fi/pages/viewpage.action?pageId=76514684",
         "_My source code_: https://github.com/solita/ossi-bot",
-        `_Deployment_: ${version} ${environment}`
-    ].join('\n');
+        `_Deployment_: ${Config.get('VERSION')} ${Config.get('ENVIRONMENT')}`
+    ]);
     return helpMessage;
 }

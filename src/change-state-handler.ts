@@ -4,14 +4,46 @@ import { authLambdaEvent } from "./slack-auth";
 import { updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
 import { Config } from "./shared/config";
 
-import { postInstantMessage } from "./shared/slack-interaction";
+import { postInstantMessage, slackMessageFromLines } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 const sizeConstants = {
-    large: 'Marked this contribution to be a large one (this is currently not supported)',
-    medium: `Marked your contribution to be medium. I will get back to you, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`,
-    small: `Marked your contribution to be small. I will get back to you, when your contribution gets processed.  All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`,
-    no_compensation: `Marked your contribution to be no compensation. Even though you did not request for compensation, I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`,
-    competence_development: `Good to know that you use competence development hours for Open Source work. You don't get compensation when using competence development hours for OSS work, but I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
+    large: slackMessageFromLines([
+      "*You terrible hacker*",
+      "",
+      "LARGE contributions are not supported :police_car:"
+    ]),
+    medium: slackMessageFromLines([
+      "*Hi!*",
+      "",
+      "I received a medium sized contribution from you. Ossi loves to process these :heart:",
+      "I will get back to you, when your contribution gets processed.",
+      "",
+      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
+    ]),
+    small: slackMessageFromLines([
+      "*Hi!*",
+      "",
+      "I received a small sized contribution from you :heart: :diamond:",
+      "I will get back to you, when your contribution gets processed.",
+      "",
+      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
+    ]),
+    no_compensation: slackMessageFromLines([
+      "*Hi!*",
+      "",
+      "I received a no compensation contribution from you. It's good to share knowledge about your open source work.",
+      "Eventhough you did not request compensation, I will get back to you, when your contribution gets processed, because I want to spread knowledge about your work.",
+      "",
+      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
+    ]),
+    competence_development: slackMessageFromLines([
+      "*Hi!*",
+      "",
+      "Good to know that you use competence development hours for Open Source work.",
+      "You don't get compensation when using competence development hours for OSS work, but I'll shoot you a message, when your contribution gets processed.",
+      "",
+      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
+    ]),
 }
 /**
  * Change state handler is a handler for slack interactive components.
@@ -29,6 +61,7 @@ export const changeState = (event: any) => {
     }
     const interaction = JSON.parse(parse(event.body).payload);
 
+    // Adding new contribution, send notification to user
     if (interaction.type === 'view_submission') {
 
         const desc = interaction.view.state.values.desc_input.description.value;
@@ -45,63 +78,10 @@ export const changeState = (event: any) => {
                 });
         });
     }
+
+    // These commands are accept/decline from management channel
     const [id, timestamp] = interaction.callback_id.split('-');
-    
-    if (interaction.actions[0].value === 'large') {
-        return updateSize(id, timestamp, 'LARGE')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: 'Marked this contribution to be a large one (this is currently not supported)'
-                    })
-                }
-            });
-    }
-    if (interaction.actions[0].value === 'medium') {
-        return updateSize(id, timestamp, 'MEDIUM')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: `Marked your contribution to be medium. I will get back to you, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-                    })
-                }
-            });
-    }
-    if (interaction.actions[0].value === 'small') {
-        return updateSize(id, timestamp, 'SMALL')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: `Marked your contribution to be small. I will get back to you, when your contribution gets processed.  All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-                    })
-                }
-            });
-    }
-    if (interaction.actions[0].value === 'no_compensation') {
-        return updateSize(id, timestamp, 'NO_COMPENSATION')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: `Marked your contribution to be no compensation. Even though you did not request for compensation, I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-                    })
-                }
-            });
-    }
-    if (interaction.actions[0].value === 'competence_development') {
-        return updateSize(id, timestamp, 'COMPETENCE_DEVELOPMENT')
-            .then(_ => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        text: `Good to know that you use competence development hours for Open Source work. You don't get compensation when using competence development hours for OSS work, but I'll shoot you a message, when your contribution gets processed. All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-                    })
-                }
-            });
-    }
+
     if (interaction.actions[0].value === 'accepted') {
         return getContribution(id, timestamp).then(item => {
             return updateState(id, timestamp, 'ACCEPTED')
@@ -190,4 +170,3 @@ export const changeState = (event: any) => {
         })
     });
 };
-
