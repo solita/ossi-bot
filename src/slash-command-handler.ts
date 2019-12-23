@@ -12,6 +12,7 @@ interface SlackSlashCommandPayload {
     channel: string;
     type: string;
 }
+
 /**
  * Slash command handler replies to slash commands in slack
  *
@@ -20,7 +21,7 @@ interface SlackSlashCommandPayload {
  *
  * @param event
  */
-export const handleSlashCommand = (event: any) => {
+export const handleSlashCommand = (event: any): Promise<LambdaResponse> => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
