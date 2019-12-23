@@ -20,8 +20,6 @@ interaction.postInstantMessage = jest.fn(() => {
 });
 
 
-require('./test-utils');
-
 type DynamoString = {
     S: String
 }

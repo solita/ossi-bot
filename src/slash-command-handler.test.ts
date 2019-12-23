@@ -1,6 +1,5 @@
 import {Config, ConfigKeys} from "./shared/config";
 
-require('./test-utils');
 import { handleSlashCommand } from './slash-command-handler';
 const auth = require('./slack-auth');
 const { stringify } = require('querystring');

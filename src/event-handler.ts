@@ -1,14 +1,14 @@
 'use strict';
 
 import { authLambdaEvent } from "./slack-auth";
-import { postMessage, slackMessageFromLines } from "./shared/slack-interaction";
+import { postMessage, slackMessageFromLines, LambdaResponse } from "./shared/slack-interaction";
 
 /**
  * Event handler listens to private conversations between solitan and Ossi.
  *
  * @param event
  */
-export const handleEvent = (event: any) => {
+export const handleEvent = (event: any): Promise<LambdaResponse> => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,

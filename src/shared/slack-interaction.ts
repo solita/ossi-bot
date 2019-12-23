@@ -7,7 +7,7 @@ import {Contribution} from './model';
 
 export interface LambdaResponse {
     statusCode: number,
-    body: string
+    body?: string
 }
 
 export function postMessage(channel: string, message: string, attachments: any = []): Promise<any> {
