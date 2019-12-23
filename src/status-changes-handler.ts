@@ -44,13 +44,13 @@ const sendResult = (contribution: Contribution) => {
             {
                 fallback: 'fallback',
                 color: ((status) => {
-                    if(status === 'PENDING') {
+                    if (status === 'PENDING') {
                         return "#ffff00";
                     }
-                    if(status === 'ACCEPTED') {
+                    if (status === 'ACCEPTED') {
                         return "#36a64f";
                     }
-                    if(status === 'DECLINED') {
+                    if (status === 'DECLINED') {
                         return "#ff0000";
                     }
                 })(contribution.status),
@@ -70,13 +70,13 @@ const sendToPublicChannel = (contribution: Contribution) => {
             {
                 fallback: 'fallback',
                 color: ((status) => {
-                    if(status === 'PENDING') {
+                    if (status === 'PENDING') {
                         return "#ffff00";
                     }
-                    if(status === 'ACCEPTED') {
+                    if (status === 'ACCEPTED') {
                         return "#36a64f";
                     }
-                    if(status === 'DECLINED') {
+                    if (status === 'DECLINED') {
                         return "#ff0000";
                     }
                 })(contribution.status),
@@ -90,17 +90,23 @@ const sendToPublicChannel = (contribution: Contribution) => {
 /**
  * Dynamo DB stream returns records in "dynamo typed" format. This maps record to Contribution
  */
-const dynamoRecordToContribution = (dynamoRecord: any): Contribution => {
-  return {
-    id: dynamoRecord.id.S,
-    timestamp: parseInt(dynamoRecord.timestamp.N),
-    username: dynamoRecord.username.S,
-    size: dynamoRecord.size.S,
-    status: dynamoRecord.status.S,
-    text: dynamoRecord.text.S,
-    url: dynamoRecord.url.S,
-    contributionMonth: dynamoRecord.contributionMonth.S
-  };
+const dynamoRecordToContribution = (dyRecord: any): Contribution => {
+    // There is a weird typing error. This file does not have any references to dynamodb models.
+    /*
+    src/change-state-handler.ts (98,64): Argument of type 'AttributeMap' is not assignable to parameter of type 'Contribution'.
+      Type 'AttributeMap' is missing the following properties from type 'Contribution': id, timestamp, username, size, and 3 more.
+    src/change-state-handler.ts (128,64): Argument of type 'AttributeMap' is not assignable to parameter of type 'Contribution'.
+     */
+    return {
+        id: dyRecord.id.S,
+        timestamp: parseInt(dyRecord.timestamp.N),
+        username: dyRecord.username.S,
+        size: dyRecord.size.S,
+        status: dyRecord.status.S,
+        text: dyRecord.text.S,
+        url: dyRecord.url.S,
+        contributionMonth: dyRecord.contributionMonth.S
+    } as Contribution;
 };
 
 export const handleStream = async (event: any): Promise<{ message?: string, status?: string }> => {
@@ -110,7 +116,7 @@ export const handleStream = async (event: any): Promise<{ message?: string, stat
         return Promise.resolve({status: 'OK', message: 'NO_WORK'})
     }
 
-    const newImage = dynamoRecordToContribution(event.Records[0].dynamodb.NewImage);
+    const newImage: Contribution = dynamoRecordToContribution(event.Records[0].dynamodb.NewImage);
 
     // TODO: error handling, what if posting a slack message fails
     // now, if posting fails, stream is marked as processed. This should fail the lambda
@@ -119,13 +125,13 @@ export const handleStream = async (event: any): Promise<{ message?: string, stat
     if (newImage.status === 'PENDING') {
         return sendNotificationToManagementChannel(newImage)
             .then(() => {
-                return { status: 'OK', message: 'Notified management channel' };
+                return {status: 'OK', message: 'Notified management channel'};
             })
             .catch((err) => {
                 console.error('Error while sending notification');
                 console.error(err);
                 // This will mark lambda as success though
-                return { status: 'FAIL', message: 'Notified management channel failure' }
+                return {status: 'FAIL', message: 'Notified management channel failure'}
             });
     }
 
@@ -141,7 +147,7 @@ export const handleStream = async (event: any): Promise<{ message?: string, stat
                 console.error('Error while sending result');
                 console.error(err);
                 // This will mark lambda as success though
-                return {status: 'FAIL', message: 'Handled accepted message failure' }
+                return {status: 'FAIL', message: 'Handled accepted message failure'}
             });
     }
 
