@@ -3,7 +3,7 @@
 Ossi is a slack bot for registering Open Source Contributions in Solita. Ossi offers slash commands, subscribes to events and interacts with interactive components.
 
 1. Read the instructions in slack using slash command `/ossi`
-2. Send a private message to Ossi bot user which describes contribution
+2. Use slash command `/ossi new` and then fill the modal inputs. You can also type the description field after new-word.
 3. Message will be posted to private channel for sanity check
 4. If contribution is accepted, a confirmation is sent and public channel is notified about this contribution
 5. If contribution is declined, only sender is notified
@@ -13,14 +13,14 @@ Ossi is a slack bot for registering Open Source Contributions in Solita. Ossi of
 Setting up the Slack application is the hardest part in deployment.
 
 1. Create the Slack app at https://api.slack.com/apps/
-2. Deploy this backend with correct Slack signing secret (you can get it from your apps configuration), and management and public channels
-3. Create bot user for your app (such as @ossitron-2000)
+2. Create bot user for your app (such as @ossitron-2000)
+3. Deploy this backend with correct Slack signing secret (you can get it from your apps configuration), and management and public channels
 4. Add slash command to your app. Such as `/ossi` and define your `../slash` endpoint as an endpoint. Something like `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev/slash`
 5. Add interactive component handler to your app and route it to `../state`. Something like `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev/state`
 6. Add event handler for your app and route it to `../event`. Something like `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev/event`. Event handlers are expected to respond to challenges, so if it doesn't get verified, you signing secret is probably incorrect.
 7. Subscribe `message.im` events - **Important!** Subscribe to Bot Events, **NOT** to workspace events!!!
 8. Install your app (this might require admin privileges depending on your Slack configuration)
-9. Add Bot user to  management and public channels
+9. Add Bot user to management and public channels
 10. Update your deployment with newly created bot user token (Oauth & permissions -> Bot User OAuth Access Token)
 11. Test slash command
 12. Test sending a private message to bot
@@ -31,17 +31,18 @@ Setting up the Slack application is the hardest part in deployment.
 
 Contributions are stored to AWS DynamoDB using partition key `userId` and sort key `timestamp`. On top of keys, a row contains the following data:
 
-* privateChannel - identifier of the private channel between Ossi Bot and contribution sender, used for sending personal notifications back
 * size - size marker of the contribution
 * text - submitted contribution text
 * name - name of the contributor resolved via Slack API
 * status
+* url - URL of the contribution
+* contributionMonth - The contribution month in YYYY-MM-format
 
 **Statuses**
 
 | Status          | Explanation                                                                    |
 | --------------- | ------------------------------------------------------------------------------ |
-| INITIAL         | Initial status when Ossi asks back "do you wan't to submit this contribution?" |
+| INITIAL         | Initial status when contribution is written to DynamoDB                        |
 | PENDING         | Pending sanity check from management channel                                   |
 | ACCEPTED        | Accepted contribution                                                          |
 | DECLINED        | Declined contribution - only used for bogus and invalid submissions            |
@@ -50,7 +51,7 @@ Contributions are stored to AWS DynamoDB using partition key `userId` and sort k
 
 | From       | To       | Stream Action                                                         |
 | ---------- | -------- | --------------------------------------------------------------------- |
-| INITIAL    | PENDING  | Send notification to management channel                               |
+| INITIAL    | PENDING  | Send notification to management channel and private notification to submitter. |
 | PENDING    | ACCEPTED | Notification to public channel and private notification to submitter  |
 | PENDING    | DECLINED | Private notification to submitter                                     |
 

@@ -1,24 +1,13 @@
-import {listContributions, replyWithHelp, rollbackContribution} from "./slack-interaction";
-import {Contribution} from "./model";
+import { listContributions, getHelpMessage } from "./slack-interaction";
+import { Contribution } from "./model";
 const dynamo = require('./dynamo');
 
 
 describe('slack-interaction.ts', () => {
 
-    describe('replyWithHelp()', () => {
+    describe('getHelpMessage()', () => {
         it('Should resolve values from environment', () => {
-            return expect(replyWithHelp()).resolves.toMatchObject({
-                statusCode: 200,
-                body: expect.stringContaining('Ossi')
-            });
-        })
-    });
-
-    describe('rollbackContribution()', () => {
-        it('Should call deleteEntry from dynamo', async () => {
-            dynamo.deleteEntry = jest.fn(() => Promise.resolve());
-            await rollbackContribution('abc-42');
-            expect(dynamo.deleteEntry).toBeCalledWith('abc', '42');
+            return expect(getHelpMessage()).toEqual(expect.stringContaining('Ossi'))
         })
     });
 
@@ -39,7 +28,6 @@ describe('slack-interaction.ts', () => {
                 return Promise.resolve([{
                     id: 'abc',
                     timestamp: 1,
-                    privateChannel: '123',
                     size: 'SMALL',
                     status: 'PENDING',
                     text: 'This is my contribution',

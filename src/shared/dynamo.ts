@@ -1,10 +1,10 @@
 import { DynamoDB } from 'aws-sdk';
 import axios from "axios";
 import * as moment from 'moment';
-import {Config} from "./config";
-import {Contribution, Status, Size} from "./model";
+import { Config } from "./config";
+import { Contribution, Status, Size } from "./model";
 
-const ddb = new DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
+const ddb = new DynamoDB.DocumentClient({ apiVersion: '2012-08-10' });
 
 export const getContributions = (id: string): Promise<Contribution[]> => {
     const params = {
@@ -13,6 +13,19 @@ export const getContributions = (id: string): Promise<Contribution[]> => {
             ':id': id
         },
         KeyConditionExpression: 'id = :id',
+    };
+    return ddb.query(params).promise()
+        .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
+};
+
+export const getContributionsForMonth = (contributionMonth: string): Promise<Contribution[]> => {
+    const params = {
+        TableName: Config.get('DYNAMO_TABLE'),
+        IndexName: Config.get('DYNAMO_GSI'),
+        ExpressionAttributeValues: {
+            ':contributionMonth': contributionMonth
+        },
+        KeyConditionExpression: 'contributionMonth = :contributionMonth',
     };
     return ddb.query(params).promise()
         .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
@@ -45,15 +58,14 @@ export const deleteEntry = (id: string, timestamp: string) => {
     return ddb.delete(params).promise();
 };
 
-export const updateState = (id: string, timestamp: string,
-                            state: Status) => {
+export const updateState = (id: string, timestamp: string, state: Status) => {
     const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Key: {
             id,
             timestamp: parseInt(timestamp)
         },
-        ExpressionAttributeNames: {'#status' : 'status'},
+        ExpressionAttributeNames: { '#status': 'status' },
         UpdateExpression: 'set #status = :status',
         ExpressionAttributeValues: {
             ':status': state
@@ -62,15 +74,14 @@ export const updateState = (id: string, timestamp: string,
     return ddb.update(params).promise();
 };
 
-export const updateSize = (id: string, timestamp: string,
-                               size: Size ) => {
+export const updateSize = (id: string, timestamp: string, size: Size ) => {
     const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Key: {
             id,
             timestamp: parseInt(timestamp)
         },
-        ExpressionAttributeNames: {'#size' : 'size', '#status': 'status'},
+        ExpressionAttributeNames: { '#size': 'size', '#status': 'status' },
         UpdateExpression: 'set #size = :size, #status = :status',
         ExpressionAttributeValues: {
             ':size': size,
@@ -81,7 +92,7 @@ export const updateSize = (id: string, timestamp: string,
 };
 
 
-export const writeContribution = async (id: string, text: string, privateChannel: string): Promise<any> => {
+export const writeContribution = async (id: string, text: string, url: string, compMonth: string): Promise<any> => {
     const userInfo = await axios.get(`https://slack.com/api/users.info?user=${id}`,
         {
             headers: {
@@ -92,13 +103,14 @@ export const writeContribution = async (id: string, text: string, privateChannel
     const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         Item: {
-            'id' : id,
+            'id': id,
             'timestamp': timestamp,
-            'text' : text,
+            'text': text,
             'username': userInfo.data.user.real_name,
             'status': 'INITIAL',
             'size': 'UNKNOWN',
-            'privateChannel': privateChannel,
+            'url': url,
+            'contributionMonth': compMonth
 
         }
     };

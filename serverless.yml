@@ -36,6 +36,7 @@ provider:
     VERSION: ${opt:version}
     ENVIRONMENT: ${opt:stage}
     DYNAMO_TABLE: ossi-contributions-table-${opt:stage}
+    DYNAMO_GSI: monthlyReportGSI
 
 # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
@@ -51,6 +52,15 @@ provider:
         - dynamodb:GetShardIterator
         - dynamodb:ListStreams
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions-table-${opt:stage}"
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:Query
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/ossi-contributions-table-${opt:stage}/index/monthlyReportGSI"
 
 functions:
 
@@ -73,6 +83,11 @@ functions:
       - http:
           path: state
           method: post
+
+  monthly-report:
+    handler: src/monthly-report-handler.generateMonthlyReport
+    events: # Run report on third day of month at 6 AM UTC
+      - schedule: cron(0 6 3 * ? *)
 
   streamFunction:
     handler: src/status-changes-handler.handleStream
@@ -101,6 +116,9 @@ resources:
           -
             AttributeName: timestamp
             AttributeType: N
+          -
+            AttributeName: contributionMonth
+            AttributeType: S
 
         KeySchema:
           -
@@ -115,6 +133,16 @@ resources:
         TableName: ossi-contributions-table-${opt:stage}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
+        GlobalSecondaryIndexes:
+          - IndexName: monthlyReportGSI
+            KeySchema:
+              - AttributeName: contributionMonth
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         Tags:
           -
             Key: Owner

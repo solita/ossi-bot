@@ -1,5 +1,5 @@
 import {Config} from "./shared/config";
-import {postMessage} from "./shared/slack-interaction";
+import {postMessage, postInstantMessage} from "./shared/slack-interaction";
 import * as moment from "moment-timezone";
 
 const sendNotificationToManagementChannel = (data: any) => {
@@ -57,9 +57,9 @@ const sendNotificationToManagementChannel = (data: any) => {
 };
 
 const sendResult = (data: any) => {
-    console.log(`Sending notification to private channel ${data.privateChannel.S} for ${data.id.S}-${data.timestamp.N}`);
-    return postMessage(
-        data.privateChannel.S,
+    console.log(`Sending notification with instant message for ${data.id.S}-${data.timestamp.N}`);
+    return postInstantMessage(
+        data.id.S,
         `Your contribution got processed!`,
         [
             {
@@ -131,9 +131,6 @@ const sendToPublicChannel = (data: any) => {
 };
 
 export const handleStream = async (event: any) => {
-    // log out the raw event
-    // console.log(JSON.stringify(event, null, 2));
-
     // Don't do anything, if event is item removal or insert
     if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);
@@ -183,6 +180,4 @@ export const handleStream = async (event: any) => {
                 return {message: 'OK'}
             });
     }
-
-
 };
