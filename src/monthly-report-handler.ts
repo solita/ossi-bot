@@ -7,12 +7,22 @@ import * as moment from 'moment-timezone';
 import { Contribution } from "./shared/model";
 import { postFile } from './shared/slack-interaction'
 
+type MonthlyReportEvent = {
+  descriptor?: string;
+}
+
+function getContributionMonth(descriptor: string): string {
+  if(descriptor) {
+    return descriptor;
+  }
+  return moment().subtract(1, "month").format('YYYY-MM');
+}
 
 /**
  * Fetches all contributions for previous month, puts data to Excel and sends it to management Slack channel
  */
-export const generateMonthlyReport = () => {
-  const contributionMonthForReport = moment().subtract(1, "month").format('YYYY-MM');  
+export const generateMonthlyReport = (event: MonthlyReportEvent) => {
+  const contributionMonthForReport = getContributionMonth(event.descriptor);
 
   getContributionsForMonth(contributionMonthForReport).then(contributions => {
     const headerRowTable = [['Raportoijan slack-id', 'Kohdekuukausi', 'Raportin aikaleima', 'Nimi', 'Kompensaatio', 'Description', 'URL']];
