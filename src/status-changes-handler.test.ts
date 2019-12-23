@@ -220,7 +220,7 @@ describe('status-changes-handler.ts', () => {
         expect(interaction.postMessage).not.toHaveBeenCalled();
     });
 
-    it('Should notify submitter for ACCEPTER contribution and publish contribution to PUBLIC_CHANNEL', async () => {
+    it('Should notify submitter for ACCEPTED contribution and publish contribution to PUBLIC_CHANNEL', async () => {
         const event = createEvent('UPDATE',
             createImage({
                 contributionMonth: '2019-12',
