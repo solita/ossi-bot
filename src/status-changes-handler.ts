@@ -62,7 +62,7 @@ const sendResult = (contribution: Contribution) => {
 };
 
 const sendToPublicChannel = (contribution: Contribution) => {
-    console.log(`Sending notification to public channel ${Config.get("PUBLIC_CHANNEL")} for ${contribution.id}-${contribution.timestamp}`);
+    console.log(`Publishing contribution to public channel ${Config.get('PUBLIC_CHANNEL')} for ${contribution.id}-${contribution.timestamp}`);
     return postMessage(
         Config.get("PUBLIC_CHANNEL"),
         `Hello hello! Here's a new contribution by ${contribution.username}!`,
@@ -101,27 +101,31 @@ const dynamoRecordToContribution = (dynamoRecord: any): Contribution => {
     url: dynamoRecord.url.S,
     contributionMonth: dynamoRecord.contributionMonth.S
   };
-}
+};
 
-export const handleStream = async (event: any) => {
+export const handleStream = async (event: any): Promise<{ message?: string, status?: string }> => {
     // Don't do anything, if event is item removal or insert
     if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);
-        return Promise.resolve({message: 'OK'})
+        return Promise.resolve({status: 'OK', message: 'NO_WORK'})
     }
 
     const newImage = dynamoRecordToContribution(event.Records[0].dynamodb.NewImage);
 
+    // TODO: error handling, what if posting a slack message fails
+    // now, if posting fails, stream is marked as processed. This should fail the lambda
+    // and event would get processed maximumRetryAttempts times.
+
     if (newImage.status === 'PENDING') {
         return sendNotificationToManagementChannel(newImage)
             .then(() => {
-                console.log('Sent notification');
-                return {message: 'OK'};
+                return { status: 'OK', message: 'Notified management channel' };
             })
             .catch((err) => {
                 console.error('Error while sending notification');
                 console.error(err);
-                return {message: 'OK'}
+                // This will mark lambda as success though
+                return { status: 'FAIL', message: 'Notified management channel failure' }
             });
     }
 
@@ -131,26 +135,26 @@ export const handleStream = async (event: any) => {
                 return sendToPublicChannel(newImage);
             })
             .then(() => {
-                console.log('Sent result');
-                return {message: 'OK'};
+                return {status: 'OK', message: 'Handled accepted message'};
             })
             .catch((err) => {
                 console.error('Error while sending result');
                 console.error(err);
-                return {message: 'OK'}
+                // This will mark lambda as success though
+                return {status: 'FAIL', message: 'Handled accepted message failure' }
             });
     }
 
     if (newImage.status === 'DECLINED') {
         return sendResult(newImage)
             .then(() => {
-                console.log('Sent result');
-                return {message: 'OK'};
+                return {status: 'OK', message: 'Notified submitter about declination'};
             })
             .catch((err) => {
                 console.error('Error while sending result');
                 console.error(err);
-                return {message: 'OK'}
+                // This will mark lambda as success though
+                return {status: 'FAIL', message: 'Notified submitter about declination failure'}
             });
     }
 };

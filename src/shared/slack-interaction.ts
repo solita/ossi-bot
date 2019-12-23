@@ -20,7 +20,7 @@ export function postMessage(channel: string, message: string, attachments: any =
             "Content-Type": "application/json",
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
-    }).then(() => ({ statusCode: 200 }));
+    }).then((r) => ({ statusCode: r.status }));
 }
 
 export function postInstantMessage(user: string, message: string, attachments: any = []): Promise<any> {
@@ -32,7 +32,7 @@ export function postInstantMessage(user: string, message: string, attachments: a
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
     }).then((result) => {
-        return postMessage(result.data.channel.id, message, attachments)
+        return postMessage(result.data.channel.id, message, attachments);
     });
 }
 
