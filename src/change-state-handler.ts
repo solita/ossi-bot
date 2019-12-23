@@ -4,7 +4,7 @@ import { authLambdaEvent } from "./slack-auth";
 import { updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
 import { Config } from "./shared/config";
 
-import { postInstantMessage, slackMessageFromLines } from "./shared/slack-interaction";
+import { postInstantMessage, slackMessageFromLines, contributionFields } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 const sizeConstants = {
     large: slackMessageFromLines([
@@ -95,18 +95,7 @@ export const changeState = (event: any) => {
                                     pretext: "Accepted contribution",
                                     author_name: item.username,
                                     text: item.text,
-                                    fields: [
-                                        {
-                                            title: "Size",
-                                            value: item.size,
-                                            short: true
-                                        },
-                                        {
-                                            title: "Status",
-                                            value: 'ACCEPTED',
-                                            short: true
-                                        }
-                                    ]
+                                    fields: contributionFields(item)
                                 }
                             ]
                         })
@@ -136,18 +125,7 @@ export const changeState = (event: any) => {
                                     pretext: "Declined contribution",
                                     author_name: item.username,
                                     text: item.text,
-                                    fields: [
-                                        {
-                                            title: "Size",
-                                            value: item.size,
-                                            short: true
-                                        },
-                                        {
-                                            title: "Status",
-                                            value: 'DECLINED',
-                                            short: true
-                                        }
-                                    ]
+                                    fields: contributionFields(item)
                                 }
                             ]
                         })

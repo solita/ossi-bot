@@ -3,6 +3,7 @@ import axios from "axios";
 import * as moment from 'moment-timezone';
 import { Config } from "./config";
 import * as FormData from 'form-data';
+import {Contribution} from './model';
 
 export interface LambdaResponse {
     statusCode: number,
@@ -253,23 +254,7 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
                         }
                     })(item.status),
                     text: item.text,
-                    fields: [
-                        {
-                            title: "Size",
-                            value: item.size,
-                            short: true
-                        },
-                        {
-                            title: "Status",
-                            value: item.status,
-                            short: true
-                        },
-                        {
-                            title: "Submitted",
-                            value: moment(item.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
-                            short: true
-                        },
-                    ]
+                    fields: contributionFields(item)
                 };
             })
         };
@@ -280,6 +265,48 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     });
 }
 
+type SlackField = {
+  title: String,
+  value: String,
+  short: boolean
+};
+
+/**
+ * Fn to generate slack message fields from contribution entry
+ */
+export function contributionFields(contribution: Contribution): SlackField[] {
+  return [
+    {
+        title: "Size",
+        value: contribution.size,
+        short: true
+    },
+    {
+        title: "Status",
+        value: contribution.status,
+        short: true
+    },
+    {
+        title: "URL",
+        value: contribution.url || 'Old contribution',
+        short: true
+    },
+    {
+        title: "Contribution month",
+        value: contribution.contributionMonth || 'Old contribution',
+        short: true
+    },
+    {
+        title: "Submitted",
+        value: moment(contribution.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
+        short: true
+    },
+  ];
+}
+
+/**
+ * Utility fn to make a long slack message
+ */
 export function slackMessageFromLines(lines: string[]): string {
   return lines.join('\n');
 }

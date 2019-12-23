@@ -8,5 +8,5 @@ export interface Contribution {
     status: Status;
     text: string;
     url: string;
-    contributionMonth: string;
+    contributionMonth?: string;
 }

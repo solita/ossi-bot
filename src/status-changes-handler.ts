@@ -1,40 +1,19 @@
 import {Config} from "./shared/config";
-import {postMessage, postInstantMessage} from "./shared/slack-interaction";
-import * as moment from "moment-timezone";
+import {Contribution} from "./shared/model";
+import {postMessage, postInstantMessage, contributionFields} from "./shared/slack-interaction";
 
-const sendNotificationToManagementChannel = (data: any) => {
-    console.log(`Sending notification to management channel ${Config.get('MANAGEMENT_CHANNEL')} for ${data.id.S}-${data.timestamp.N}`);
+const sendNotificationToManagementChannel = (contribution: Contribution) => {
+    console.log(`Sending notification to management channel ${Config.get('MANAGEMENT_CHANNEL')} for ${contribution.id}-${contribution.timestamp}`);
     return postMessage(
         Config.get('MANAGEMENT_CHANNEL'),
-        `Hi! I received a new open source contribution submission by ${data.username.S}!`,
+        `Hi! I received a new open source contribution submission by ${contribution.username}!`,
         [
             {
                 fallback: 'fallback',
                 color: "#ffff00",
-                callback_id: `${data.id.S}-${data.timestamp.N}`,
-                text: data.text.S,
-                fields: [
-                    {
-                        title: "Size",
-                        value: data.size.S,
-                        short: true
-                    },
-                    {
-                        title: "Status",
-                        value: data.status.S,
-                        short: true
-                    },
-                    {
-                        title: "ID",
-                        value: `${data.id.S}-${data.timestamp.N}`,
-                        short: true
-                    },
-                    {
-                        title: "Submitted",
-                        value: moment(parseInt(data.timestamp.N)).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
-                        short: true
-                    },
-                ],
+                callback_id: `${contribution.id}-${contribution.timestamp}`,
+                text: contribution.text,
+                fields: contributionFields(contribution),
                 actions: [
                     {
                         name: "STATE",
@@ -56,10 +35,10 @@ const sendNotificationToManagementChannel = (data: any) => {
         ]);
 };
 
-const sendResult = (data: any) => {
-    console.log(`Sending notification with instant message for ${data.id.S}-${data.timestamp.N}`);
+const sendResult = (contribution: Contribution) => {
+    console.log(`Sending notification with instant message for ${contribution.id}-${contribution.timestamp}`);
     return postInstantMessage(
-        data.id.S,
+        contribution.id,
         `Your contribution got processed!`,
         [
             {
@@ -74,30 +53,19 @@ const sendResult = (data: any) => {
                     if(status === 'DECLINED') {
                         return "#ff0000";
                     }
-                })(data.status.S),
-                callback_id: `${data.id.S}-${data.timestamp.N}`,
-                text: data.text.S,
-                fields: [
-                    {
-                        title: "Size",
-                        value: data.size.S,
-                        short: true
-                    },
-                    {
-                        title: "Status",
-                        value: data.status.S,
-                        short: true
-                    }
-                ]
+                })(contribution.status),
+                callback_id: `${contribution.id}-${contribution.timestamp}`,
+                text: contribution.text,
+                fields: contributionFields(contribution)
             }
         ]);
 };
 
-const sendToPublicChannel = (data: any) => {
-    console.log(`Sending notification to public channel ${Config.get("PUBLIC_CHANNEL")} for ${data.id.S}-${data.timestamp.N}`);
+const sendToPublicChannel = (contribution: Contribution) => {
+    console.log(`Sending notification to public channel ${Config.get("PUBLIC_CHANNEL")} for ${contribution.id}-${contribution.timestamp}`);
     return postMessage(
         Config.get("PUBLIC_CHANNEL"),
-        `Hello hello! Here's a new contribution by ${data.username.S}!`,
+        `Hello hello! Here's a new contribution by ${contribution.username}!`,
         [
             {
                 fallback: 'fallback',
@@ -111,24 +79,29 @@ const sendToPublicChannel = (data: any) => {
                     if(status === 'DECLINED') {
                         return "#ff0000";
                     }
-                })(data.status.S),
-                callback_id: `${data.id.S}-${data.timestamp.N}`,
-                text: data.text.S,
-                fields: [
-                    {
-                        title: "Size",
-                        value: data.size.S,
-                        short: true
-                    },
-                    {
-                        title: "Status",
-                        value: data.status.S,
-                        short: true
-                    }
-                ]
+                })(contribution.status),
+                callback_id: `${contribution.id}-${contribution.timestamp}`,
+                text: contribution.text,
+                fields: contributionFields(contribution)
             }
         ]);
 };
+
+/**
+ * Dynamo DB stream returns records in "dynamo typed" format. This maps record to Contribution
+ */
+const dynamoRecordToContribution = (dynamoRecord: any): Contribution => {
+  return {
+    id: dynamoRecord.id.S,
+    timestamp: parseInt(dynamoRecord.timestamp.N),
+    username: dynamoRecord.username.S,
+    size: dynamoRecord.size.S,
+    status: dynamoRecord.status.S,
+    text: dynamoRecord.text.S,
+    url: dynamoRecord.url.S,
+    contributionMonth: dynamoRecord.contributionMonth.S
+  };
+}
 
 export const handleStream = async (event: any) => {
     // Don't do anything, if event is item removal or insert
@@ -137,9 +110,9 @@ export const handleStream = async (event: any) => {
         return Promise.resolve({message: 'OK'})
     }
 
-    const newImage = event.Records[0].dynamodb.NewImage;
+    const newImage = dynamoRecordToContribution(event.Records[0].dynamodb.NewImage);
 
-    if (newImage.status.S === 'PENDING') {
+    if (newImage.status === 'PENDING') {
         return sendNotificationToManagementChannel(newImage)
             .then(() => {
                 console.log('Sent notification');
@@ -152,7 +125,7 @@ export const handleStream = async (event: any) => {
             });
     }
 
-    if (newImage.status.S === 'ACCEPTED') {
+    if (newImage.status === 'ACCEPTED') {
         return sendResult(newImage)
             .then(() => {
                 return sendToPublicChannel(newImage);
@@ -168,7 +141,7 @@ export const handleStream = async (event: any) => {
             });
     }
 
-    if (newImage.status.S === 'ACCEPTED' || newImage.status.S === 'DECLINED') {
+    if (newImage.status === 'DECLINED') {
         return sendResult(newImage)
             .then(() => {
                 console.log('Sent result');
