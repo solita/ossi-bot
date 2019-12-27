@@ -1,7 +1,7 @@
 import {Config, ConfigKeys} from "./shared/config";
 
 import { handleSlashCommand } from './slash-command-handler';
-const auth = require('./slack-auth');
+const auth = require('./shared/slack-auth');
 const { stringify } = require('querystring');
 const interaction = require('./shared/slack-interaction');
 
@@ -23,7 +23,7 @@ const testEvent = (body: any) => {
             'X-Slack-Request-Timestamp': 12345,
         },
         body: stringify(body)
-    };
+    } as any;
 };
 
 describe('slash-command-handler.ts', () => {

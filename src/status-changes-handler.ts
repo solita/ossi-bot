@@ -1,6 +1,7 @@
 import {Config} from "./shared/config";
-import {Contribution} from "./shared/model";
+import {Contribution, Size, Status} from "./shared/model";
 import {postMessage, postInstantMessage, contributionFields} from "./shared/slack-interaction";
+import {AttributeValue, DynamoDBStreamEvent} from "aws-lambda";
 
 const sendNotificationToManagementChannel = (contribution: Contribution) => {
     console.log(`Sending notification to management channel ${Config.get('MANAGEMENT_CHANNEL')} for ${contribution.id}-${contribution.timestamp}`);
@@ -90,26 +91,20 @@ const sendToPublicChannel = (contribution: Contribution) => {
 /**
  * Dynamo DB stream returns records in "dynamo typed" format. This maps record to Contribution
  */
-const dynamoRecordToContribution = (dyRecord: any): Contribution => {
-    // There is a weird typing error. This file does not have any references to dynamodb models.
-    /*
-    src/change-state-handler.ts (98,64): Argument of type 'AttributeMap' is not assignable to parameter of type 'Contribution'.
-      Type 'AttributeMap' is missing the following properties from type 'Contribution': id, timestamp, username, size, and 3 more.
-    src/change-state-handler.ts (128,64): Argument of type 'AttributeMap' is not assignable to parameter of type 'Contribution'.
-     */
+const dynamoRecordToContribution = (dyRecord: { [key: string]: AttributeValue }): Contribution => {
     return {
         id: dyRecord.id.S,
         timestamp: parseInt(dyRecord.timestamp.N),
         username: dyRecord.username.S,
-        size: dyRecord.size.S,
-        status: dyRecord.status.S,
+        size: dyRecord.size.S as Size,
+        status: dyRecord.status.S as Status,
         text: dyRecord.text.S,
         url: dyRecord.url.S,
         contributionMonth: dyRecord.contributionMonth.S
-    } as Contribution;
+    };
 };
 
-export const handleStream = async (event: any): Promise<{ message?: string, status?: string }> => {
+export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ message?: string, status?: string }> => {
     // Don't do anything, if event is item removal or insert
     if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);

@@ -1,11 +1,12 @@
 'use strict';
 
-import { authLambdaEvent } from "./slack-auth";
+import { authLambdaEvent } from "./shared/slack-auth";
 import { updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
 import { Config } from "./shared/config";
-
+import {APIGatewayEvent} from "aws-lambda";
 import { postInstantMessage, slackMessageFromLines, contributionFields } from "./shared/slack-interaction";
 const { parse } = require('querystring');
+
 const sizeConstants = {
     large: slackMessageFromLines([
       "*You terrible hacker*",
@@ -52,7 +53,7 @@ const sizeConstants = {
  *
  * @param event
  */
-export const changeState = (event: any) => {
+export const changeState = (event: APIGatewayEvent) => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,

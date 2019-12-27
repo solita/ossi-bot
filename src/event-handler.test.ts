@@ -1,5 +1,5 @@
 import { handleEvent } from './event-handler';
-const auth = require('./slack-auth');
+const auth = require('./shared/slack-auth');
 
 const interaction = require('./shared/slack-interaction');
 
@@ -10,7 +10,7 @@ const testEvent = (body: any) => {
             'X-Slack-Request-Timestamp': 12345,
         },
         body: JSON.stringify(body)
-    };
+    } as any;
 };
 
 

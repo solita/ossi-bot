@@ -1,5 +1,6 @@
 import * as CryptoJS from 'crypto-js';
-import {Config} from "./shared/config";
+import {Config} from "./config";
+import {APIGatewayEvent} from "aws-lambda";
 
 export const calculateSignature = (secret: string, payload: string): string => {
     return `v0=${CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)}`;
@@ -13,7 +14,7 @@ export const getSecret = () => {
     return Config.get("SLACK_SIGNING_SECRET");
 };
 
-export const authLambdaEvent = (event: any): boolean => {
+export const authLambdaEvent = (event: APIGatewayEvent): boolean => {
     return verifySignature(
         event.headers['X-Slack-Signature'],
         getSecret(),

@@ -31,7 +31,7 @@ export const getContributionsForMonth = (contributionMonth: string): Promise<Con
         .then((dynamoResult) => dynamoResult.Items.map(item => item as Contribution));
 };
 
-export const getContribution = (id: string, timestamp: string) => {
+export const getContribution = (id: string, timestamp: string): Promise<Contribution> => {
     const params = {
         TableName: Config.get('DYNAMO_TABLE'),
         ExpressionAttributeValues: {
@@ -44,7 +44,8 @@ export const getContribution = (id: string, timestamp: string) => {
         },
         KeyConditionExpression: '#id = :id and #timestamp = :timestamp',
     };
-    return ddb.query(params).promise().then(results => results.Items[0]);
+    return ddb.query(params).promise()
+        .then(results => results.Items[0] as Contribution);
 };
 
 export const deleteEntry = (id: string, timestamp: string) => {

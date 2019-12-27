@@ -1,7 +1,8 @@
 'use strict';
 
-import { authLambdaEvent } from "./slack-auth";
+import { authLambdaEvent } from "./shared/slack-auth";
 import { listContributions, getHelpMessage, postModalBlock, LambdaResponse } from "./shared/slack-interaction";
+import {APIGatewayEvent} from "aws-lambda";
 const { parse } = require('querystring');
 
 interface SlackSlashCommandPayload {
@@ -21,7 +22,7 @@ interface SlackSlashCommandPayload {
  *
  * @param event
  */
-export const handleSlashCommand = (event: any): Promise<LambdaResponse> => {
+export const handleSlashCommand = (event: APIGatewayEvent): Promise<LambdaResponse> => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
