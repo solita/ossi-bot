@@ -1,6 +1,12 @@
 import {Config} from "./shared/config";
 import {Contribution, Size, Status} from "./shared/model";
-import {postMessage, postInstantMessage, contributionFields, contributionColor} from "./shared/slack-interaction";
+import {
+    postMessage,
+    postInstantMessage,
+    contributionFields,
+    contributionColor,
+    craftReceiveConfirmation
+} from "./shared/slack-interaction";
 import {AttributeValue, DynamoDBStreamEvent} from "aws-lambda";
 
 const sendNotificationToManagementChannel = (contribution: Contribution) => {
@@ -34,6 +40,14 @@ const sendNotificationToManagementChannel = (contribution: Contribution) => {
             }
 
         ]);
+};
+
+const sendReceiveConfirmation = (contribution: Contribution) => {
+    console.log(`Sending notification with instant message for ${contribution.id}-${contribution.timestamp}`);
+    return postInstantMessage(
+        contribution.id,
+        craftReceiveConfirmation(contribution),
+        );
 };
 
 const sendResult = (contribution: Contribution) => {
@@ -86,7 +100,7 @@ const dynamoRecordToContribution = (dyRecord: { [key: string]: AttributeValue })
 
 export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ message?: string, status?: string }> => {
     // Don't do anything, if event is item removal or insert
-    if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
+    if (event.Records[0].eventName === 'REMOVE') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);
         return Promise.resolve({status: 'OK', message: 'NO_WORK'})
     }
@@ -99,6 +113,9 @@ export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ messag
 
     if (newImage.status === 'PENDING') {
         return sendNotificationToManagementChannel(newImage)
+            .then(() => {
+                return sendReceiveConfirmation(newImage)
+            })
             .then(() => {
                 return {status: 'OK', message: 'Notified management channel'};
             })

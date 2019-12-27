@@ -1,56 +1,14 @@
 'use strict';
 
 import { authLambdaEvent } from "./shared/slack-auth";
-import { updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
-import { Config } from "./shared/config";
+import {updateState, getContribution, createNewContribution} from "./shared/dynamo";
 import {APIGatewayEvent} from "aws-lambda";
 import {
-    postInstantMessage,
-    slackMessageFromLines,
     contributionFields,
-    contributionColor
+    contributionColor, LambdaResponse
 } from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
-const sizeConstants = {
-    large: slackMessageFromLines([
-      "*You terrible hacker*",
-      "",
-      "LARGE contributions are not supported :police_car:"
-    ]),
-    medium: slackMessageFromLines([
-      "*Hi!*",
-      "",
-      "I received a medium sized contribution from you. Ossi loves to process these :heart:",
-      "I will get back to you, when your contribution gets processed.",
-      "",
-      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-    ]),
-    small: slackMessageFromLines([
-      "*Hi!*",
-      "",
-      "I received a small sized contribution from you :heart: :diamond:",
-      "I will get back to you, when your contribution gets processed.",
-      "",
-      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-    ]),
-    no_compensation: slackMessageFromLines([
-      "*Hi!*",
-      "",
-      "I received a no compensation contribution from you. It's good to share knowledge about your open source work.",
-      "Eventhough you did not request compensation, I will get back to you, when your contribution gets processed, because I want to spread knowledge about your work.",
-      "",
-      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-    ]),
-    competence_development: slackMessageFromLines([
-      "*Hi!*",
-      "",
-      "Good to know that you use competence development hours for Open Source work.",
-      "You don't get compensation when using competence development hours for OSS work, but I'll shoot you a message, when your contribution gets processed.",
-      "",
-      `All accepted contributions are posted to ${Config.get("PUBLIC_CHANNEL")}.`
-    ]),
-}
 /**
  * Change state handler is a handler for slack interactive components.
  *
@@ -58,7 +16,7 @@ const sizeConstants = {
  *
  * @param event
  */
-export const changeState = (event: APIGatewayEvent) => {
+export const changeState = (event: APIGatewayEvent): Promise<LambdaResponse> => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
@@ -75,14 +33,13 @@ export const changeState = (event: APIGatewayEvent) => {
         const month = interaction.view.state.values.comp_month_input.comp_month_val.selected_option.value;
         const level = interaction.view.state.values.comp_lvl_input.comp_lvl_val.selected_option.value;
 
-        return writeContribution(interaction.user.id, desc, url, month).then((eventId) => {
-            const [contributionId, contributionTimestamp] = eventId.split('-');
-            const levelText = level === 'LARGE' ? sizeConstants.large : level === 'MEDIUM' ? sizeConstants.medium : level === 'SMALL' ? sizeConstants.small : level === 'COMPETENCE_DEVELOPMENT' ? sizeConstants.competence_development : sizeConstants.no_compensation;
-            return updateSize(contributionId, contributionTimestamp, level)
-                .then(() => {
-                    return postInstantMessage(interaction.user.id, levelText);
-                });
-        });
+        return createNewContribution({
+            url,
+            id: interaction.user.id,
+            text: desc,
+            contributionMonth: month,
+            size: level
+        }).then(() => ({ statusCode: 200 }))
     }
 
     // These commands are accept/decline from management channel

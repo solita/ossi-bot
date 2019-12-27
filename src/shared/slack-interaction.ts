@@ -321,7 +321,7 @@ export function slackMessageFromLines(lines: string[]): string {
 
 export function getHelpMessage(): string {
     const helpMessage = slackMessageFromLines([
-        "*Hi there!*",
+        `*${randomEntry(hellos)}*`,
         "",
         "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
         "",
@@ -334,7 +334,7 @@ export function getHelpMessage(): string {
         "",
         "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel for sanity check your contribution.",
         "",
-        "When your contribution gets processed, I will notify you back.", ,
+        "When your contribution gets processed, I will notify you back.",
         "",
         "If you have questions about the process contact Valtteri Valovirta. If I'm broken contact Juho Friman, Ville Virtanen or Olli Sorje.",
         "",
@@ -351,4 +351,87 @@ export function getHelpMessage(): string {
         `_Deployment_: ${Config.get('VERSION')} ${Config.get('ENVIRONMENT')}`
     ]);
     return helpMessage;
+}
+
+const hellos = [
+    'Hi!',
+    'Hi there!',
+    'Howdy!',
+    ':wave: Howdy!',
+    'Hello!',
+    `It's nice to meet you!`,
+    'Hello there!',
+    'Hello there! :wave:',
+    'G’day!',
+    'G’day! :wave:',
+    'Yo!',
+    'Howdy partner!'
+];
+
+const confirmationStarters = [
+    'I just wanted to let you know that ',
+    `I'm approaching you to let you know that `,
+    `Just letting you know that `,
+];
+
+const confirmationTexts = {
+    'SMALL': [
+        'I just received a small contribution entry from you.',
+        'I just received a small contribution proposal from you.',
+        'I just received your contribution marked as small.',
+        'You just entered small contribution entry.',
+    ],
+    'MEDIUM': [
+        'I just received a medium contribution entry from you.',
+        'I just received a medium contribution proposal from you.',
+        'I just received your contribution marked as medium.',
+    ],
+    'NO_COMPENSATION': [
+        `I received your contribution which you think is so small, that you don't seek compensation.`
+    ],
+    'COMPETENCE_DEVELOPMENT': [
+        'I received you contribution done on competence development hours.',
+        'I appreciate you using competence development hours for open source work.'
+    ],
+    'LARGE': [
+        `Ossi does not support large contributions. You did something ugly, or I'm broken somehow :feelsbadman:`
+    ]
+};
+
+const confirmationEndings = {
+    'SMALL': [
+        'I will get back to you soon.',
+        'I will shoot you a message soon.',
+        `I will get back to you.`,
+        `I will get back to you soon.`,
+    ],
+    'MEDIUM': [
+        'I will get back to you soon.',
+        'I will shoot you a message soon.',
+        `I will get back to you.`,
+        `I will get back to you soon.`,
+    ],
+    'NO_COMPENSATION': [
+        `It's good to know that you do open source work, you probably could ask for compensation though?`
+    ],
+    'COMPETENCE_DEVELOPMENT': [
+        'Good to know, that you use competence development for open source work',
+    ],
+    'LARGE': [
+        `Ossi does not support large contributions. You did something ugly, or I'm broken somehow :feelsbadman:`
+    ]
+};
+
+function randomEntry(values: string[]): string {
+    return values[Math.floor(Math.random() * values.length)];
+}
+
+export function craftReceiveConfirmation(contribution: Contribution): string {
+    return slackMessageFromLines([
+        `*${randomEntry(hellos)}*`,
+        '',
+        `${randomEntry(confirmationStarters)}${randomEntry(confirmationTexts[contribution.size])}`,
+        '',
+        randomEntry(confirmationEndings[contribution.size])
+    ]);
 }

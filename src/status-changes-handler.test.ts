@@ -95,24 +95,6 @@ describe('status-changes-handler.ts', () => {
         jest.clearAllMocks();
     });
 
-    it('Should do nothing for INSERT event', async () => {
-        const event = createEvent('INSERT', createImage({
-            contributionMonth: '2019-12',
-            id: 'THEID',
-            timestamp: 1233445678,
-            size: 'SMALL',
-            status: 'PENDING',
-            text: 'My contribution',
-            url: 'https://www.solita.fi/open-source',
-            username: 'mockmockelson',
-        }));
-
-        return expect(handleStream(event)).resolves.toEqual({
-            status: 'OK',
-            message: 'NO_WORK'
-        });
-    });
-
     it('Should do nothing for REMOVE event', async () => {
         const event = createEvent('REMOVE', createImage({
             contributionMonth: '2019-12',
@@ -131,24 +113,15 @@ describe('status-changes-handler.ts', () => {
         });
     });
 
-    it('Should notify management channel for PENDING contribution', async () => {
-        const event = createEvent('UPDATE',
+
+    it('Should notify management channel for new PENDING contribution', async () => {
+        const event = createEvent('INSERT',
             createImage({
                 contributionMonth: '2019-12',
                 id: 'THEID',
                 timestamp: 1233445678,
                 size: 'SMALL',
                 status: 'PENDING',
-                text: 'My contribution',
-                url: 'https://www.solita.fi/open-source',
-                username: 'mockmockelson',
-            }),
-            createImage({
-                contributionMonth: '2019-12',
-                id: 'THEID',
-                timestamp: 1233445678,
-                size: 'SMALL',
-                status: 'INITIAL',
                 text: 'My contribution',
                 url: 'https://www.solita.fi/open-source',
                 username: 'mockmockelson',
@@ -172,7 +145,11 @@ describe('status-changes-handler.ts', () => {
                 })
             ]
         );
-        expect(interaction.postInstantMessage).not.toHaveBeenCalled();
+        expect(interaction.postInstantMessage).toHaveBeenCalledTimes(1);
+        expect(interaction.postInstantMessage).toHaveBeenCalledWith(
+            'THEID',
+            expect.any(String)
+        );
     });
 
     it('Should notify submitter for DECLINED contribution', async () => {
