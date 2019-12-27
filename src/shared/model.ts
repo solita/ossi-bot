@@ -7,6 +7,6 @@ export interface Contribution {
     size: Size;
     status: Status;
     text: string;
-    url: string;
+    url?: string;
     contributionMonth?: string;
 }

@@ -38,11 +38,11 @@ export function postInstantMessage(user: string, message: string, attachments: a
 
 export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {
     const formData = new FormData();
-    formData.append('token', Config.get('SLACK_TOKEN'))
+    formData.append('token', Config.get('SLACK_TOKEN'));
     formData.append('filename', filename);
     formData.append('file', fileBuffer, filename);
     formData.append('initial_comment', message);
-    formData.append('channels', channel)
+    formData.append('channels', channel);
 
     return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), { headers: formData.getHeaders() })
     .then((result) => {
@@ -288,12 +288,12 @@ export function contributionFields(contribution: Contribution): SlackField[] {
     },
     {
         title: "URL",
-        value: contribution.url || 'Old contribution',
+        value: contribution.url || 'No URL available',
         short: true
     },
     {
         title: "Contribution month",
-        value: contribution.contributionMonth || 'Old contribution',
+        value: contribution.contributionMonth || 'No contribution month available',
         short: true
     },
     {

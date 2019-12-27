@@ -1,5 +1,6 @@
-import { listContributions, getHelpMessage } from "./slack-interaction";
+import {listContributions, getHelpMessage, contributionFields} from "./slack-interaction";
 import { Contribution } from "./model";
+import * as moment from "moment-timezone";
 const dynamo = require('./dynamo');
 
 describe('slack-interaction.ts', () => {
@@ -20,7 +21,7 @@ describe('slack-interaction.ts', () => {
 
     describe('getHelpMessage()', () => {
         it('Should resolve values from environment', () => {
-            const helpMessage = getHelpMessage()
+            const helpMessage = getHelpMessage();
             expect(helpMessage).toEqual(expect.stringContaining('Ossi'));
             expect(helpMessage).toEqual(expect.stringContaining('TEST-VERSION'));
             expect(helpMessage).toEqual(expect.stringContaining('UNIT-TEST'));
@@ -57,5 +58,85 @@ describe('slack-interaction.ts', () => {
         });
     });
 
+    describe('contributionFields()', () => {
+        it('Should generate fields as expected', () => {
+            const timestamp = 12345;
+            const expectedTimestampFormat = moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss')
+            const fields = contributionFields({
+                id: 'abc',
+                timestamp: timestamp,
+                status: 'ACCEPTED',
+                size: 'SMALL',
+                username: 'Mock Mockelson',
+                text: 'This is my contribution',
+                contributionMonth: "2019-02",
+                url: 'https://www.dummy.com'
+            });
+            expect(fields).toEqual([
+                {
+                    title: 'Size',
+                    value: 'SMALL',
+                    short: true
+                },
+                {
+                    title: 'Status',
+                    value: 'ACCEPTED',
+                    short: true
+                },
+                {
+                    title: 'URL',
+                    value: 'https://www.dummy.com',
+                    short: true
+                },
+                {
+                    title: 'Contribution month',
+                    value: '2019-02',
+                    short: true
+                },
+                {
+                    title: 'Submitted',
+                    value: expectedTimestampFormat,
+                    short: true
+                }]);
+        });
 
+        it('Should provide values for missing fields', () => {
+            const timestamp = 12345;
+            const expectedTimestampFormat = moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss')
+            const fields = contributionFields({
+                id: 'abc',
+                timestamp: timestamp,
+                status: 'ACCEPTED',
+                size: 'SMALL',
+                username: 'Mock Mockelson',
+                text: 'This is my contribution',
+            });
+            expect(fields).toEqual([
+                {
+                    title: 'Size',
+                    value: 'SMALL',
+                    short: true
+                },
+                {
+                    title: 'Status',
+                    value: 'ACCEPTED',
+                    short: true
+                },
+                {
+                    title: 'URL',
+                    value: 'No URL available',
+                    short: true
+                },
+                {
+                    title: 'Contribution month',
+                    value: 'No contribution month available',
+                    short: true
+                },
+                {
+                    title: 'Submitted',
+                    value: expectedTimestampFormat,
+                    short: true
+                }]);
+        });
+    });
 });
