@@ -102,7 +102,7 @@ export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ messag
     // Don't do anything, if event is item removal or insert
     if (event.Records[0].eventName === 'REMOVE') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);
-        return Promise.resolve({status: 'OK', message: 'NO_WORK'})
+        return Promise.resolve({status: 'OK', message: 'NO_WORK'});
     }
 
     const newImage: Contribution = dynamoRecordToContribution(event.Records[0].dynamodb.NewImage);
@@ -111,7 +111,7 @@ export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ messag
     // now, if posting fails, stream is marked as processed. This should fail the lambda
     // and event would get processed maximumRetryAttempts times.
 
-    if (newImage.status === 'PENDING') {
+    if (event.Records[0].eventName === 'INSERT' && newImage.status === 'PENDING') {
         return sendNotificationToManagementChannel(newImage)
             .then(() => {
                 return sendReceiveConfirmation(newImage)
@@ -155,4 +155,5 @@ export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ messag
                 return {status: 'FAIL', message: 'Notified submitter about declination failure'}
             });
     }
+    return Promise.resolve({status: 'OK', message: 'NO_WORK'});
 };

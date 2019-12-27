@@ -152,6 +152,39 @@ describe('status-changes-handler.ts', () => {
         );
     });
 
+    it('Should not send notifications on UPDATE for PENDING contributions', async () => {
+        const event = createEvent('UPDATE',
+            createImage({
+                contributionMonth: '2019-12',
+                id: 'THEID',
+                timestamp: 1233445678,
+                size: 'SMALL',
+                status: 'PENDING',
+                text: 'My contribution',
+                url: 'https://www.solita.fi/open-source/fixed',
+                username: 'mockmockelson',
+            }),
+            createImage({
+                contributionMonth: '2019-12',
+                id: 'THEID',
+                timestamp: 1233445678,
+                size: 'SMALL',
+                status: 'PENDING',
+                text: 'My contribution',
+                url: 'https://www.solita.fi/open-source',
+                username: 'mockmockelson',
+            }));
+
+        const response = await handleStream(event);
+
+        expect(response.status).toEqual('OK');
+        expect(response.message).toEqual('NO_WORK');
+
+        expect(interaction.postMessage).not.toHaveBeenCalled();
+        expect(interaction.postInstantMessage).not.toHaveBeenCalled();
+
+    });
+
     it('Should notify submitter for DECLINED contribution', async () => {
         const event = createEvent('UPDATE',
             createImage({
