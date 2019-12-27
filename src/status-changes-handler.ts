@@ -43,7 +43,7 @@ const sendNotificationToManagementChannel = (contribution: Contribution) => {
 };
 
 const sendReceiveConfirmation = (contribution: Contribution) => {
-    console.log(`Sending notification with instant message for ${contribution.id}-${contribution.timestamp}`);
+    console.log(`Sending receive confirmation to contributor with instant message for ${contribution.id}-${contribution.timestamp}, status ${contribution.status}`);
     return postInstantMessage(
         contribution.id,
         craftReceiveConfirmation(contribution),
@@ -51,7 +51,7 @@ const sendReceiveConfirmation = (contribution: Contribution) => {
 };
 
 const sendResult = (contribution: Contribution) => {
-    console.log(`Sending notification with instant message for ${contribution.id}-${contribution.timestamp}`);
+    console.log(`Sending process status to contributor with instant message for ${contribution.id}-${contribution.timestamp}, status ${contribution.status}`);
     return postInstantMessage(
         contribution.id,
         `Your contribution got processed!`,
