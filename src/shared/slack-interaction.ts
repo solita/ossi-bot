@@ -242,17 +242,7 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
             attachments: results.map((item) => {
                 return {
                     fallback: 'fallback',
-                    color: ((status) => {
-                        if(status === 'PENDING') {
-                            return "#ffff00";
-                        }
-                        if (status === 'ACCEPTED') {
-                            return "#36a64f";
-                        }
-                        if (status === 'DECLINED') {
-                            return "#ff0000";
-                        }
-                    })(item.status),
+                    color: contributionColor(item),
                     text: item.text,
                     fields: contributionFields(item)
                 };
@@ -302,6 +292,24 @@ export function contributionFields(contribution: Contribution): SlackField[] {
         short: true
     },
   ];
+}
+
+/**
+ * Returns color depending on contribution status
+ *
+ * @param contribution
+ */
+export function contributionColor(contribution: Contribution): string {
+    if (contribution.status === 'PENDING') {
+        return "#ffff00";
+    }
+    if (contribution.status === 'ACCEPTED') {
+        return "#36a64f";
+    }
+    if (contribution.status === 'DECLINED') {
+        return "#ff0000";
+    }
+    throw new Error(`Unknown contribution status ${contribution.status}`);
 }
 
 /**

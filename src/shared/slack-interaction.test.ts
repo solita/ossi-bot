@@ -1,4 +1,4 @@
-import {listContributions, getHelpMessage, contributionFields} from "./slack-interaction";
+import {listContributions, getHelpMessage, contributionFields, contributionColor} from "./slack-interaction";
 import { Contribution } from "./model";
 import * as moment from "moment-timezone";
 const dynamo = require('./dynamo');
@@ -58,10 +58,36 @@ describe('slack-interaction.ts', () => {
         });
     });
 
+    describe('contributionColor()', () => {
+        it('Should generate fields as expected', () => {
+
+            const baseContribution: Contribution = {
+                id: 'abc',
+                timestamp: 12345,
+                status: 'ACCEPTED',
+                size: 'SMALL',
+                username: 'Mock Mockelson',
+                text: 'This is my contribution',
+                contributionMonth: "2019-02",
+                url: 'https://www.dummy.com'
+            };
+            expect(contributionColor(Object.assign(baseContribution, {status: "ACCEPTED"})))
+                .toEqual('#36a64f');
+            expect(contributionColor(Object.assign(baseContribution, {status: "DECLINED"})))
+                .toEqual('#ff0000');
+            expect(contributionColor(Object.assign(baseContribution, {status: "PENDING"})))
+                .toEqual('#ffff00');
+            expect(() => contributionColor(Object.assign(baseContribution, {status: "FOOBAR"})))
+                .toThrow();
+        });
+
+    });
+
     describe('contributionFields()', () => {
         it('Should generate fields as expected', () => {
             const timestamp = 12345;
-            const expectedTimestampFormat = moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss')
+            const expectedTimestampFormat =
+                moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss');
             const fields = contributionFields({
                 id: 'abc',
                 timestamp: timestamp,
@@ -102,7 +128,8 @@ describe('slack-interaction.ts', () => {
 
         it('Should provide values for missing fields', () => {
             const timestamp = 12345;
-            const expectedTimestampFormat = moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss')
+            const expectedTimestampFormat =
+                moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss');
             const fields = contributionFields({
                 id: 'abc',
                 timestamp: timestamp,

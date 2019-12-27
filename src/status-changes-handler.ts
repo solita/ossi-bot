@@ -1,6 +1,6 @@
 import {Config} from "./shared/config";
 import {Contribution, Size, Status} from "./shared/model";
-import {postMessage, postInstantMessage, contributionFields} from "./shared/slack-interaction";
+import {postMessage, postInstantMessage, contributionFields, contributionColor} from "./shared/slack-interaction";
 import {AttributeValue, DynamoDBStreamEvent} from "aws-lambda";
 
 const sendNotificationToManagementChannel = (contribution: Contribution) => {
@@ -11,7 +11,7 @@ const sendNotificationToManagementChannel = (contribution: Contribution) => {
         [
             {
                 fallback: 'fallback',
-                color: "#ffff00",
+                color: contributionColor(contribution),
                 callback_id: `${contribution.id}-${contribution.timestamp}`,
                 text: contribution.text,
                 fields: contributionFields(contribution),
@@ -44,17 +44,7 @@ const sendResult = (contribution: Contribution) => {
         [
             {
                 fallback: 'fallback',
-                color: ((status) => {
-                    if (status === 'PENDING') {
-                        return "#ffff00";
-                    }
-                    if (status === 'ACCEPTED') {
-                        return "#36a64f";
-                    }
-                    if (status === 'DECLINED') {
-                        return "#ff0000";
-                    }
-                })(contribution.status),
+                color: contributionColor(contribution),
                 callback_id: `${contribution.id}-${contribution.timestamp}`,
                 text: contribution.text,
                 fields: contributionFields(contribution)
@@ -70,17 +60,7 @@ const sendToPublicChannel = (contribution: Contribution) => {
         [
             {
                 fallback: 'fallback',
-                color: ((status) => {
-                    if (status === 'PENDING') {
-                        return "#ffff00";
-                    }
-                    if (status === 'ACCEPTED') {
-                        return "#36a64f";
-                    }
-                    if (status === 'DECLINED') {
-                        return "#ff0000";
-                    }
-                })(contribution.status),
+                color: contributionColor(contribution),
                 callback_id: `${contribution.id}-${contribution.timestamp}`,
                 text: contribution.text,
                 fields: contributionFields(contribution)
