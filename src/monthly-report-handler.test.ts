@@ -60,7 +60,7 @@ describe('monthly-report-handler.ts', () => {
         expect(interaction.postFile).toHaveBeenCalledTimes(1);
         expect(interaction.postFile).toHaveBeenCalledWith(
             '#ossi-management',
-            `Here's the report of open source contributions :money-with_wings:`,
+            `Here's the report of open source contributions :money_with_wings:`,
             expect.anything(), // This is the raw xlsx buffer. Mapping is tested with spy below
             '2019-01.xlsx'
         );

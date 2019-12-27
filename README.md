@@ -18,12 +18,12 @@ Setting up the Slack application is the hardest part in deployment.
 4. Add slash command to your app. Such as `/ossi` and define your `../slash` endpoint as an endpoint. Something like `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev/slash`
 5. Add interactive component handler to your app and route it to `../state`. Something like `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev/state`
 6. Add event handler for your app and route it to `../event`. Something like `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev/event`. Event handlers are expected to respond to challenges, so if it doesn't get verified, you signing secret is probably incorrect.
-7. Subscribe `message.im` events - **Important!** Subscribe to Bot Events, **NOT** to workspace events!!!
+7. Subscribe `message.im` events - **Important!** Subscribe to Bot Events, **NOT** to workspace events!!! (Note: this is not required anymore, but we keep it here to inform about the new UI)
 8. Install your app (this might require admin privileges depending on your Slack configuration)
 9. Add Bot user to management and public channels
 10. Update your deployment with newly created bot user token (Oauth & permissions -> Bot User OAuth Access Token)
 11. Test slash command
-12. Test sending a private message to bot
+12. Test creating contribution with `/ossi new`
 13. Test declining contribution
 14. Test accepting contribution
 
@@ -104,7 +104,7 @@ Install deps
 yarn
 ```
 
-Run tests. Tests are pretty much WIP stuff..
+Run tests
 
 ```
 yarn test

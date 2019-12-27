@@ -4,7 +4,12 @@ import { authLambdaEvent } from "./shared/slack-auth";
 import { updateState, updateSize, getContribution, writeContribution } from "./shared/dynamo";
 import { Config } from "./shared/config";
 import {APIGatewayEvent} from "aws-lambda";
-import { postInstantMessage, slackMessageFromLines, contributionFields } from "./shared/slack-interaction";
+import {
+    postInstantMessage,
+    slackMessageFromLines,
+    contributionFields,
+    contributionColor
+} from "./shared/slack-interaction";
 const { parse } = require('querystring');
 
 const sizeConstants = {
@@ -87,12 +92,13 @@ export const changeState = (event: APIGatewayEvent) => {
         return getContribution(id, timestamp).then(item => {
             return updateState(id, timestamp, 'ACCEPTED')
                 .then(_ => {
+                    item.status = 'ACCEPTED';
                     return {
                         statusCode: 200,
                         body: JSON.stringify({
                             attachments: [
                                 {
-                                    color: "#36a64f",
+                                    color: contributionColor(item),
                                     pretext: "Accepted contribution",
                                     author_name: item.username,
                                     text: item.text,
@@ -117,12 +123,13 @@ export const changeState = (event: APIGatewayEvent) => {
         return getContribution(id, timestamp).then(item => {
             return updateState(id, timestamp, 'DECLINED')
                 .then(_ => {
+                    item.status = 'DECLINED';
                     return {
                         statusCode: 200,
                         body: JSON.stringify({
                             attachments: [
                                 {
-                                    color: "#ff0000",
+                                    color: contributionColor(item),
                                     pretext: "Declined contribution",
                                     author_name: item.username,
                                     text: item.text,
