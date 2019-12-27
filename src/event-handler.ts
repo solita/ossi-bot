@@ -1,14 +1,15 @@
 'use strict';
 
-import { authLambdaEvent } from "./slack-auth";
-import { getHelpMessage, postMessage } from "./shared/slack-interaction";
+import { authLambdaEvent } from "./shared/slack-auth";
+import { postMessage, slackMessageFromLines, LambdaResponse } from "./shared/slack-interaction";
+import {APIGatewayEvent} from "aws-lambda";
 
 /**
  * Event handler listens to private conversations between solitan and Ossi.
  *
  * @param event
  */
-export const handleEvent = (event: any) => {
+export const handleEvent = (event: APIGatewayEvent): Promise<LambdaResponse> => {
     if (!authLambdaEvent(event)) {
         return Promise.resolve({
             statusCode: 401,
@@ -31,11 +32,16 @@ export const handleEvent = (event: any) => {
         return Promise.resolve({ statusCode: 200 });
     }
 
-    if (!body.event.text) {
-        console.info('Message without text');
-        console.info(JSON.stringify(body, null, 2));
-        return Promise.resolve({ statusCode: 200 });
-    }
+    // As of december 2019, we don't talk directly to Ossi anymore
+    // Just return a help message, that informs user to use `/ossi new`
+    const botResponse = slackMessageFromLines([
+        "*I have been improved!*",
+        "",
+        "I dont anymore read your contributions from direct messages.",
+        "Instead, plese use `/ossi new` command in any channel. This command opens a neat modal for you to create contribution.",
+        "",
+        "Have fun!"
+    ]);
 
-    return postMessage(body.event.channel, getHelpMessage());
+    return postMessage(body.event.channel, botResponse);
 };

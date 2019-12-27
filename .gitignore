@@ -14,3 +14,7 @@ solita-env.sh
 .build
 
 coverage
+
+out
+
+yarn-error.log

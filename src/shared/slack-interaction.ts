@@ -3,10 +3,11 @@ import axios from "axios";
 import * as moment from 'moment-timezone';
 import { Config } from "./config";
 import * as FormData from 'form-data';
+import {Contribution} from './model';
 
 export interface LambdaResponse {
     statusCode: number,
-    body: string
+    body?: string
 }
 
 export function postMessage(channel: string, message: string, attachments: any = []): Promise<any> {
@@ -19,7 +20,7 @@ export function postMessage(channel: string, message: string, attachments: any =
             "Content-Type": "application/json",
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
-    }).then(() => ({ statusCode: 200 }));
+    }).then((r) => ({ statusCode: r.status }));
 }
 
 export function postInstantMessage(user: string, message: string, attachments: any = []): Promise<any> {
@@ -31,17 +32,17 @@ export function postInstantMessage(user: string, message: string, attachments: a
             "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
         }
     }).then((result) => {
-        return postMessage(result.data.channel.id, message, attachments)
+        return postMessage(result.data.channel.id, message, attachments);
     });
 }
 
-export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {   
+export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {
     const formData = new FormData();
-    formData.append('token', Config.get('SLACK_TOKEN'))
+    formData.append('token', Config.get('SLACK_TOKEN'));
     formData.append('filename', filename);
     formData.append('file', fileBuffer, filename);
     formData.append('initial_comment', message);
-    formData.append('channels', channel)
+    formData.append('channels', channel);
 
     return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), { headers: formData.getHeaders() })
     .then((result) => {
@@ -51,7 +52,7 @@ export function postFile(channel: string, message: string, fileBuffer: Buffer, f
         console.error(`Error sending file `, error)
     });
 }
-  
+
 
 export function postModalBlock(trigger: any, initialMessage?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();
@@ -241,35 +242,9 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
             attachments: results.map((item) => {
                 return {
                     fallback: 'fallback',
-                    color: ((status) => {
-                        if(status === 'PENDING') {
-                            return "#ffff00";
-                        }
-                        if (status === 'ACCEPTED') {
-                            return "#36a64f";
-                        }
-                        if (status === 'DECLINED') {
-                            return "#ff0000";
-                        }
-                    })(item.status),
+                    color: contributionColor(item),
                     text: item.text,
-                    fields: [
-                        {
-                            title: "Size",
-                            value: item.size,
-                            short: true
-                        },
-                        {
-                            title: "Status",
-                            value: item.status,
-                            short: true
-                        },
-                        {
-                            title: "Submitted",
-                            value: moment(item.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
-                            short: true
-                        },
-                    ]
+                    fields: contributionFields(item)
                 };
             })
         };
@@ -280,20 +255,73 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     });
 }
 
-export function getHelpMessage(): string {
-    // KLUDGE: environment should be mocked for tests, because Config is fail fast
-    let version;
-    let environment;
+interface SlackField {
+  title: string,
+  value: string,
+  short: boolean
+}
 
-    try {
-      version = Config.get('VERSION');
-      environment = Config.get('ENVIRONMENT');
-    } catch (e) {
-        console.error("Something went wrong with fetching config", e);
+/**
+ * Fn to generate slack message fields from contribution entry
+ */
+export function contributionFields(contribution: Contribution): SlackField[] {
+  return [
+    {
+        title: "Size",
+        value: contribution.size,
+        short: true
+    },
+    {
+        title: "Status",
+        value: contribution.status,
+        short: true
+    },
+    {
+        title: "URL",
+        value: contribution.url || 'No URL available',
+        short: true
+    },
+    {
+        title: "Contribution month",
+        value: contribution.contributionMonth || 'No contribution month available',
+        short: true
+    },
+    {
+        title: "Submitted",
+        value: moment(contribution.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
+        short: true
+    },
+  ];
+}
+
+/**
+ * Returns color depending on contribution status
+ *
+ * @param contribution
+ */
+export function contributionColor(contribution: Contribution): string {
+    if (contribution.status === 'PENDING') {
+        return "#ffff00";
     }
+    if (contribution.status === 'ACCEPTED') {
+        return "#36a64f";
+    }
+    if (contribution.status === 'DECLINED') {
+        return "#ff0000";
+    }
+    throw new Error(`Unknown contribution status ${contribution.status}`);
+}
 
-    const helpMessage = [
-        "*Hi there!*",
+/**
+ * Utility fn to make a long slack message
+ */
+export function slackMessageFromLines(lines: string[]): string {
+  return lines.join('\n');
+}
+
+export function getHelpMessage(): string {
+    const helpMessage = slackMessageFromLines([
+        `*${randomEntry(hellos)}*`,
         "",
         "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
         "",
@@ -306,7 +334,7 @@ export function getHelpMessage(): string {
         "",
         "If you decide to submit, I will store the contribution to DynamoDB and notify my management channel for sanity check your contribution.",
         "",
-        "When your contribution gets processed, I will notify you back.", ,
+        "When your contribution gets processed, I will notify you back.",
         "",
         "If you have questions about the process contact Valtteri Valovirta. If I'm broken contact Juho Friman, Ville Virtanen or Olli Sorje.",
         "",
@@ -320,7 +348,90 @@ export function getHelpMessage(): string {
         "",
         "_Information about the policy_: https://intra.solita.fi/pages/viewpage.action?pageId=76514684",
         "_My source code_: https://github.com/solita/ossi-bot",
-        `_Deployment_: ${version} ${environment}`
-    ].join('\n');
+        `_Deployment_: ${Config.get('VERSION')} ${Config.get('ENVIRONMENT')}`
+    ]);
     return helpMessage;
+}
+
+const hellos = [
+    'Hi!',
+    'Hi there!',
+    'Howdy!',
+    ':wave: Howdy!',
+    'Hello!',
+    `It's nice to meet you!`,
+    'Hello there!',
+    'Hello there! :wave:',
+    'G’day!',
+    'G’day! :wave:',
+    'Yo!',
+    'Howdy partner!'
+];
+
+const confirmationStarters = [
+    'I just wanted to let you know that ',
+    `I'm approaching you to let you know that `,
+    `Just letting you know that `,
+];
+
+const confirmationTexts = {
+    'SMALL': [
+        'I just received a small contribution entry from you.',
+        'I just received a small contribution proposal from you.',
+        'I just received your contribution marked as small.',
+        'You just entered small contribution entry.',
+    ],
+    'MEDIUM': [
+        'I just received a medium contribution entry from you.',
+        'I just received a medium contribution proposal from you.',
+        'I just received your contribution marked as medium.',
+    ],
+    'NO_COMPENSATION': [
+        `I received your contribution which you think is so small, that you don't seek compensation.`
+    ],
+    'COMPETENCE_DEVELOPMENT': [
+        'I received you contribution done on competence development hours.',
+        'I appreciate you using competence development hours for open source work.'
+    ],
+    'LARGE': [
+        `Ossi does not support large contributions. You did something ugly, or I'm broken somehow :feelsbadman:`
+    ]
+};
+
+const confirmationEndings = {
+    'SMALL': [
+        'I will get back to you soon.',
+        'I will shoot you a message soon.',
+        `I will get back to you.`,
+        `I will get back to you soon.`,
+    ],
+    'MEDIUM': [
+        'I will get back to you soon.',
+        'I will shoot you a message soon.',
+        `I will get back to you.`,
+        `I will get back to you soon.`,
+    ],
+    'NO_COMPENSATION': [
+        `It's good to know that you do open source work, you probably could ask for compensation though?`
+    ],
+    'COMPETENCE_DEVELOPMENT': [
+        'Good to know, that you use competence development for open source work',
+    ],
+    'LARGE': [
+        `Ossi does not support large contributions. You did something ugly, or I'm broken somehow :feelsbadman:`
+    ]
+};
+
+function randomEntry(values: string[]): string {
+    return values[Math.floor(Math.random() * values.length)];
+}
+
+export function craftReceiveConfirmation(contribution: Contribution): string {
+    return slackMessageFromLines([
+        `*${randomEntry(hellos)}*`,
+        '',
+        `${randomEntry(confirmationStarters)}${randomEntry(confirmationTexts[contribution.size])}`,
+        '',
+        randomEntry(confirmationEndings[contribution.size])
+    ]);
 }

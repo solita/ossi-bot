@@ -24,7 +24,7 @@ describe('config.ts', () => {
             .toThrow('Missing environment value SLACK_SIGNING_SECRET');
     });
 
-    it('Should be mockable with jest', () => {
+    it('Should resolve values from jest mocked env (use in other tests)', () => {
         const mockEnv = {
             'SLACK_SIGNING_SECRET': 'aaabee'
         } as any;

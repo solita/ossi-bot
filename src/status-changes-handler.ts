@@ -1,40 +1,26 @@
 import {Config} from "./shared/config";
-import {postMessage, postInstantMessage} from "./shared/slack-interaction";
-import * as moment from "moment-timezone";
+import {Contribution, Size, Status} from "./shared/model";
+import {
+    postMessage,
+    postInstantMessage,
+    contributionFields,
+    contributionColor,
+    craftReceiveConfirmation
+} from "./shared/slack-interaction";
+import {AttributeValue, DynamoDBStreamEvent} from "aws-lambda";
 
-const sendNotificationToManagementChannel = (data: any) => {
-    console.log(`Sending notification to management channel ${Config.get('MANAGEMENT_CHANNEL')} for ${data.id.S}-${data.timestamp.N}`);
+const sendNotificationToManagementChannel = (contribution: Contribution) => {
+    console.log(`Sending notification to management channel ${Config.get('MANAGEMENT_CHANNEL')} for ${contribution.id}-${contribution.timestamp}`);
     return postMessage(
         Config.get('MANAGEMENT_CHANNEL'),
-        `Hi! I received a new open source contribution submission by ${data.username.S}!`,
+        `Hi! I received a new open source contribution submission by ${contribution.username}!`,
         [
             {
                 fallback: 'fallback',
-                color: "#ffff00",
-                callback_id: `${data.id.S}-${data.timestamp.N}`,
-                text: data.text.S,
-                fields: [
-                    {
-                        title: "Size",
-                        value: data.size.S,
-                        short: true
-                    },
-                    {
-                        title: "Status",
-                        value: data.status.S,
-                        short: true
-                    },
-                    {
-                        title: "ID",
-                        value: `${data.id.S}-${data.timestamp.N}`,
-                        short: true
-                    },
-                    {
-                        title: "Submitted",
-                        value: moment(parseInt(data.timestamp.N)).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
-                        short: true
-                    },
-                ],
+                color: contributionColor(contribution),
+                callback_id: `${contribution.id}-${contribution.timestamp}`,
+                text: contribution.text,
+                fields: contributionFields(contribution),
                 actions: [
                     {
                         name: "STATE",
@@ -56,128 +42,118 @@ const sendNotificationToManagementChannel = (data: any) => {
         ]);
 };
 
-const sendResult = (data: any) => {
-    console.log(`Sending notification with instant message for ${data.id.S}-${data.timestamp.N}`);
+const sendReceiveConfirmation = (contribution: Contribution) => {
+    console.log(`Sending notification with instant message for ${contribution.id}-${contribution.timestamp}`);
     return postInstantMessage(
-        data.id.S,
+        contribution.id,
+        craftReceiveConfirmation(contribution),
+        );
+};
+
+const sendResult = (contribution: Contribution) => {
+    console.log(`Sending notification with instant message for ${contribution.id}-${contribution.timestamp}`);
+    return postInstantMessage(
+        contribution.id,
         `Your contribution got processed!`,
         [
             {
                 fallback: 'fallback',
-                color: ((status) => {
-                    if(status === 'PENDING') {
-                        return "#ffff00";
-                    }
-                    if(status === 'ACCEPTED') {
-                        return "#36a64f";
-                    }
-                    if(status === 'DECLINED') {
-                        return "#ff0000";
-                    }
-                })(data.status.S),
-                callback_id: `${data.id.S}-${data.timestamp.N}`,
-                text: data.text.S,
-                fields: [
-                    {
-                        title: "Size",
-                        value: data.size.S,
-                        short: true
-                    },
-                    {
-                        title: "Status",
-                        value: data.status.S,
-                        short: true
-                    }
-                ]
+                color: contributionColor(contribution),
+                callback_id: `${contribution.id}-${contribution.timestamp}`,
+                text: contribution.text,
+                fields: contributionFields(contribution)
             }
         ]);
 };
 
-const sendToPublicChannel = (data: any) => {
-    console.log(`Sending notification to public channel ${Config.get("PUBLIC_CHANNEL")} for ${data.id.S}-${data.timestamp.N}`);
+const sendToPublicChannel = (contribution: Contribution) => {
+    console.log(`Publishing contribution to public channel ${Config.get('PUBLIC_CHANNEL')} for ${contribution.id}-${contribution.timestamp}`);
     return postMessage(
         Config.get("PUBLIC_CHANNEL"),
-        `Hello hello! Here's a new contribution by ${data.username.S}!`,
+        `Hello hello! Here's a new contribution by ${contribution.username}!`,
         [
             {
                 fallback: 'fallback',
-                color: ((status) => {
-                    if(status === 'PENDING') {
-                        return "#ffff00";
-                    }
-                    if(status === 'ACCEPTED') {
-                        return "#36a64f";
-                    }
-                    if(status === 'DECLINED') {
-                        return "#ff0000";
-                    }
-                })(data.status.S),
-                callback_id: `${data.id.S}-${data.timestamp.N}`,
-                text: data.text.S,
-                fields: [
-                    {
-                        title: "Size",
-                        value: data.size.S,
-                        short: true
-                    },
-                    {
-                        title: "Status",
-                        value: data.status.S,
-                        short: true
-                    }
-                ]
+                color: contributionColor(contribution),
+                callback_id: `${contribution.id}-${contribution.timestamp}`,
+                text: contribution.text,
+                fields: contributionFields(contribution)
             }
         ]);
 };
 
-export const handleStream = async (event: any) => {
+/**
+ * Dynamo DB stream returns records in "dynamo typed" format. This maps record to Contribution
+ */
+const dynamoRecordToContribution = (dyRecord: { [key: string]: AttributeValue }): Contribution => {
+    return {
+        id: dyRecord.id.S,
+        timestamp: parseInt(dyRecord.timestamp.N),
+        username: dyRecord.username.S,
+        size: dyRecord.size.S as Size,
+        status: dyRecord.status.S as Status,
+        text: dyRecord.text.S,
+        url: dyRecord.url.S,
+        contributionMonth: dyRecord.contributionMonth.S
+    };
+};
+
+export const handleStream = async (event: DynamoDBStreamEvent): Promise<{ message?: string, status?: string }> => {
     // Don't do anything, if event is item removal or insert
-    if (event.Records[0].eventName === 'REMOVE' || event.Records[0].eventName === 'INSERT') {
+    if (event.Records[0].eventName === 'REMOVE') {
         console.log(`Received ${event.Records[0].eventName} event. No work.`);
-        return Promise.resolve({message: 'OK'})
+        return Promise.resolve({status: 'OK', message: 'NO_WORK'});
     }
 
-    const newImage = event.Records[0].dynamodb.NewImage;
+    const newImage: Contribution = dynamoRecordToContribution(event.Records[0].dynamodb.NewImage);
 
-    if (newImage.status.S === 'PENDING') {
+    // TODO: error handling, what if posting a slack message fails
+    // now, if posting fails, stream is marked as processed. This should fail the lambda
+    // and event would get processed maximumRetryAttempts times.
+
+    if (event.Records[0].eventName === 'INSERT' && newImage.status === 'PENDING') {
         return sendNotificationToManagementChannel(newImage)
             .then(() => {
-                console.log('Sent notification');
-                return {message: 'OK'};
+                return sendReceiveConfirmation(newImage)
+            })
+            .then(() => {
+                return {status: 'OK', message: 'Notified management channel'};
             })
             .catch((err) => {
                 console.error('Error while sending notification');
                 console.error(err);
-                return {message: 'OK'}
+                // This will mark lambda as success though
+                return {status: 'FAIL', message: 'Notified management channel failure'}
             });
     }
 
-    if (newImage.status.S === 'ACCEPTED') {
+    if (newImage.status === 'ACCEPTED') {
         return sendResult(newImage)
             .then(() => {
                 return sendToPublicChannel(newImage);
             })
             .then(() => {
-                console.log('Sent result');
-                return {message: 'OK'};
+                return {status: 'OK', message: 'Handled accepted message'};
             })
             .catch((err) => {
                 console.error('Error while sending result');
                 console.error(err);
-                return {message: 'OK'}
+                // This will mark lambda as success though
+                return {status: 'FAIL', message: 'Handled accepted message failure'}
             });
     }
 
-    if (newImage.status.S === 'ACCEPTED' || newImage.status.S === 'DECLINED') {
+    if (newImage.status === 'DECLINED') {
         return sendResult(newImage)
             .then(() => {
-                console.log('Sent result');
-                return {message: 'OK'};
+                return {status: 'OK', message: 'Notified submitter about declination'};
             })
             .catch((err) => {
                 console.error('Error while sending result');
                 console.error(err);
-                return {message: 'OK'}
+                // This will mark lambda as success though
+                return {status: 'FAIL', message: 'Notified submitter about declination failure'}
             });
     }
+    return Promise.resolve({status: 'OK', message: 'NO_WORK'});
 };
