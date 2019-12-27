@@ -25,15 +25,19 @@ export const generateMonthlyReport = (event: MonthlyReportEvent) => {
   const contributionMonthForReport = getContributionMonth(event.descriptor);
 
   getContributionsForMonth(contributionMonthForReport).then(contributions => {
-    const headerRowTable = [['Raportoijan slack-id', 'Kohdekuukausi', 'Raportin aikaleima', 'Nimi', 'Kompensaatio', 'Description', 'URL']];
+    const headerRowTable = [['Slack ID', 'Target month', 'Timestamp', 'Name', 'Compensation', 'Description', 'URL']];
 
     const dataToSend = contributions
       .filter(contribution => contribution.status === 'ACCEPTED')    
       .reduce((all, contribution: Contribution) => all.concat(toContributionRowTable(contribution)), headerRowTable);
 
-    postXlsxFile(Config.get('MANAGEMENT_CHANNEL'), 'This is the monthly report', dataToSend)
+    postXlsxFile(
+        Config.get('MANAGEMENT_CHANNEL'),
+        contributionMonthForReport,
+        `Here's the report of open source contributions :money_with_wings:`,
+        dataToSend)
   })
-}
+};
 
 const toContributionRowTable = (contribution: Contribution) => [[
   String(contribution.id) , 
@@ -43,15 +47,16 @@ const toContributionRowTable = (contribution: Contribution) => [[
   String(contribution.size), 
   String(contribution.text), 
   String(contribution.url)
-]]
+]];
 
-const postXlsxFile = (channel: string, message: string, data: any[][]) => {
+const postXlsxFile = (channel: string, contributionMonth: string, message: string, data: any[][]) => {
   const xlsxBuffer = writeToXlsxBuffer(data);
 
-  postFile(channel, message, xlsxBuffer, 'test.xlsx');
+  postFile(channel, message, xlsxBuffer, `${contributionMonth}.xlsx`);
 }
 
-const writeToXlsxBuffer = (data: any[][]) => {
+// Exported for spying on tests
+export const writeToXlsxBuffer = (data: any[][]) => {
   const writingOptions: XLSX.WritingOptions =  { bookType:'xlsx', bookSST:false, type:'buffer' };
   const workBook = XLSX.utils.book_new();
   const workSheet = XLSX.utils.aoa_to_sheet(data);
