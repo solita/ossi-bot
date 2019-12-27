@@ -8,7 +8,6 @@
     "lint": "tslint --fix \"src/**/*.ts\" --project tsconfig.json",
     "test": "yarn test:unit",
     "test:unit": "jest src",
-    "test:integration": "jest integration-tests",
     "tsc": "tsc"
   },
   "author": "Juho Friman <juho.friman@solita.fi>",

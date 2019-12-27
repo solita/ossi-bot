@@ -42,19 +42,40 @@ Contributions are stored to AWS DynamoDB using partition key `userId` and sort k
 
 | Status          | Explanation                                                                    |
 | --------------- | ------------------------------------------------------------------------------ |
-| INITIAL         | Initial status when contribution is written to DynamoDB                        |
-| PENDING         | Pending sanity check from management channel                                   |
+| PENDING         | New entry. Pending sanity check from management channel                        |
 | ACCEPTED        | Accepted contribution                                                          |
 | DECLINED        | Declined contribution - only used for bogus and invalid submissions            |
 
 **Status Changes and Corresponding Stream Actions**
 
-| From       | To       | Stream Action                                                         |
-| ---------- | -------- | --------------------------------------------------------------------- |
-| INITIAL    | PENDING  | Send notification to management channel and private notification to submitter. |
-| PENDING    | ACCEPTED | Notification to public channel and private notification to submitter  |
-| PENDING    | DECLINED | Private notification to submitter                                     |
+DynamoDB stream invokes notifications as following:
 
+**INSERT** PENDING: send confirmation to submitter and notify management channel for sanity check
+
+**UPDATE** PENDING -> ACCEPTED: send notification to submitter and publish contribution to pulib channel
+
+**UPDATE** PENDING -> DECLINED: send notification to submitter
+
+**REMOVE** events do nothing
+
+This means that if you need for some reason ton modify entry directly in dynamoDB, modifications do not trigger notification.
+
+## Super Elite EXCEL Report Generator
+
+`monthly-report-handler.ts` constains a lambda, which generates `.xsls` spreadsheet about contributions and posts spreadsheet to management channel. 
+It is scheduled to run automatically monthly, but it can be invoked also directly if needed. 
+
+By default, it lists all contributions last month, but it can
+also be invoked with event payload such as:
+
+```json
+{
+  "descriptor": "2019-11"
+}
+```
+
+Which would generate report for given month. Note that this is a new feature and old contributions don't have that data persisted in GSI. 
+If needed, it can be calculated from timestamp, but it has not been done yet.
 
 ## Deploy to AWS
 
@@ -110,9 +131,12 @@ Run tests
 yarn test
 ```
 
-Run offline (doesn't make much sense currently though, but this
-is meant for running integration tests, which do not work currently).
+Because `serverless-typescript-plugin` hides root causes of typescript errors, use `yarn tsc` to compile code in case of
+weird errors. It usually shows the root cause.
 
-```
-yarn serverless offline
-```
+## Ideas and Whatnot
+
+* Integration tests would be cool, using dockerized local dynamoDB
+* It would be great to have more variance with Ossi interaction, it has some randomity, like saying "hi", "howdy" or "hi there"
+* Generating public site from the data would be cool
+* CI/CD should be done
