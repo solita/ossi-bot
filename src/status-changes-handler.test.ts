@@ -20,15 +20,15 @@ interaction.postInstantMessage = jest.fn(() => {
 });
 
 
-type DynamoString = {
-    S: String
+interface DynamoString {
+    S: string
 }
 
-type DynamoNumber = {
-    N: String
+interface DynamoNumber {
+    N: string
 }
 
-type DynamoImage = {
+interface DynamoImage {
     id: DynamoString;
     timestamp: DynamoNumber;
     size: DynamoString;

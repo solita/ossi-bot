@@ -48,6 +48,6 @@ const replyWithHelp = (): Promise<LambdaResponse> => {
     return Promise.resolve({
         statusCode: 200,
         body: getHelpMessage()
-    })
-}
+    });
+};
 

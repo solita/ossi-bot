@@ -255,11 +255,11 @@ export function listContributions(userId: string): Promise<LambdaResponse> {
     });
 }
 
-type SlackField = {
-  title: String,
-  value: String,
+interface SlackField {
+  title: string,
+  value: string,
   short: boolean
-};
+}
 
 /**
  * Fn to generate slack message fields from contribution entry
@@ -278,12 +278,12 @@ export function contributionFields(contribution: Contribution): SlackField[] {
     },
     {
         title: "URL",
-        value: contribution.url || 'No URL available',
+        value: contribution.url || 'No URL available',
         short: true
     },
     {
         title: "Contribution month",
-        value: contribution.contributionMonth || 'No contribution month available',
+        value: contribution.contributionMonth || 'No contribution month available',
         short: true
     },
     {

@@ -89,8 +89,8 @@ describe('slack-interaction.ts', () => {
             const expectedTimestampFormat =
                 moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss');
             const fields = contributionFields({
+                timestamp,
                 id: 'abc',
-                timestamp: timestamp,
                 status: 'ACCEPTED',
                 size: 'SMALL',
                 username: 'Mock Mockelson',
@@ -131,8 +131,8 @@ describe('slack-interaction.ts', () => {
             const expectedTimestampFormat =
                 moment(timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss');
             const fields = contributionFields({
+                timestamp,
                 id: 'abc',
-                timestamp: timestamp,
                 status: 'ACCEPTED',
                 size: 'SMALL',
                 username: 'Mock Mockelson',

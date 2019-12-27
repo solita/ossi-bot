@@ -7,7 +7,7 @@ import * as moment from 'moment-timezone';
 import { Contribution } from "./shared/model";
 import { postFile } from './shared/slack-interaction'
 
-type MonthlyReportEvent = {
+interface MonthlyReportEvent {
   descriptor?: string;
 }
 
