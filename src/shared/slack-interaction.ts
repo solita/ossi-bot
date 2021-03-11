@@ -24,8 +24,8 @@ export function postMessage(channel: string, message: string, attachments: any =
 }
 
 export function postInstantMessage(user: string, message: string, attachments: any = []): Promise<any> {
-    return axios.post('https://slack.com/api/im.open', {
-        user
+    return axios.post('https://slack.com/api/conversations.open', {
+        users: [user]
     }, {
         headers: {
             "Content-Type": "application/json",
