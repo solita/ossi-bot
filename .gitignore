@@ -1,6 +1,7 @@
 # package directories
 node_modules
 jspm_packages
+cdk.out
 
 # Serverless directories
 .serverless
@@ -18,3 +19,9 @@ coverage
 out
 
 yarn-error.log
+
+dist
+
+# Project configurations that include secrets
+scripts/setup-secrets.sh
+src/ossi-bot-config.ts

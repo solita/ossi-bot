@@ -1,65 +1,108 @@
-import { getContributions } from "./dynamo";
+import {getContributions} from "../model/contribution";
+import moment from 'moment-timezone';
+import FormData from 'form-data';
+import {Contribution} from '../model/model';
+import {AppConfig} from "../model/app-config";
+import {PlainTextOption, UsersInfoResponse, WebClient} from "@slack/web-api";
 import axios from "axios";
-import * as moment from 'moment-timezone';
-import { Config } from "./config";
-import * as FormData from 'form-data';
-import {Contribution} from './model';
+
 
 export interface LambdaResponse {
-    statusCode: number,
     body?: string
+    statusCode: number,
 }
 
-export function postMessage(channel: string, message: string, attachments: any = []): Promise<any> {
-    return axios.post('https://slack.com/api/chat.postMessage', {
+
+let slackClient: WebClient
+const getClient = async () => {
+    if (!slackClient) {
+        slackClient = new WebClient(await AppConfig.getEnvVarSecret('SLACK_APP_AUTH_TOKEN_SECRET_ARN'));
+    }
+    return slackClient;
+}
+
+
+
+export async function getUserInfo(userId: string): Promise<UsersInfoResponse> {
+    const client = await getClient();
+    const response = await client.users.info({user: userId});
+    if(!response.ok) {console.error(`Error opening modal `, JSON.stringify(response))}
+    return response;
+}
+
+export async function postMessage(channelWebhook: string, message: string, attachments: any = []): Promise<any> {
+    try {
+        return await axios.post(channelWebhook, {
+            text: message,
+            attachments: attachments
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${await AppConfig.getEnvVarSecret('SLACK_APP_AUTH_TOKEN_SECRET_ARN')}`
+            }
+        }).then((r) => ({ statusCode: r.status }));
+    } catch (error) {
+        console.error(`Error sending message `, error);
+    }
+}
+
+export async function postInstantMessage(user: string, message: string, attachments: any = []): Promise<any> {
+    console.log(`Sending instant message to ${user}`);
+    const client = await getClient();
+    const openConversation = await client.conversations.open({
+        users: user
+    })
+
+    if (!openConversation.ok) {
+        console.error(`Error opening conversation `, openConversation.error);
+        return {statusCode: 503}
+    }
+    const response = await client.chat.postMessage({
         attachments,
-        channel,
+        channel: user,
         text: message
-    }, {
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-        }
-    }).then((r) => ({ statusCode: r.status }));
+    })
+
+    if (!response.ok) {
+        console.error(`Error sending message `, response.error);
+        return {statusCode: 503}
+    } else {
+        return {statusCode: 200}
+    }
 }
 
-export function postInstantMessage(user: string, message: string, attachments: any = []): Promise<any> {
-    return axios.post('https://slack.com/api/conversations.open', {
-        users: [user]
-    }, {
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-        }
-    }).then((result) => {
-        return postMessage(result.data.channel.id, message, attachments);
-    });
-}
+export async function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {
+    console.log(`Sending file to ${channel}`);
+    const client = await getClient();
 
-export function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {
     const formData = new FormData();
-    formData.append('token', Config.get('SLACK_TOKEN'));
     formData.append('filename', filename);
     formData.append('file', fileBuffer, filename);
-    formData.append('initial_comment', message);
-    formData.append('channels', channel);
 
-    return axios.post('	https://slack.com/api/files.upload', formData.getBuffer(), { headers: formData.getHeaders() })
-    .then((result) => {
-        console.log('File sent successfully')
-    })
-    .catch(error => {
-        console.error(`Error sending file `, error)
-    });
+    try {
+        const response = await client.files.uploadV2({
+            filename: filename,
+            file: fileBuffer,
+            channel_id: channel,
+            initial_comment: message
+        })
+        if(!response.ok) {console.error(`Error sending file `, JSON.stringify(response))}
+
+        console.log(`File sent to ${channel}`, response);
+
+    } catch (error) {
+        console.error(`Error sending file `, error);
+    }
+
 }
 
 
-export function postModalBlock(trigger: any, initialMessage?: string, channel?: string): Promise<any> {
+export async function openCreateContributionModal(trigger: any, initialMessage?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();
 
     // if daynumber => 3  then show only current month
     // if daynumber < 3 then show current and previous month
-    const optionsBlock = [
+    const optionsBlock : PlainTextOption[] = [
         {
             text: {
                 type: "plain_text",
@@ -82,7 +125,8 @@ export function postModalBlock(trigger: any, initialMessage?: string, channel?: 
     }
     const initInput = initialMessage ? initialMessage : '';
 
-    return axios.post('https://slack.com/api/views.open', {
+    const client = await getClient();
+    const response = await client.views.open({
         trigger_id: trigger,
         view: {
             type: "modal",
@@ -163,7 +207,6 @@ export function postModalBlock(trigger: any, initialMessage?: string, channel?: 
                         options: optionsBlock
                     }
                 },
-
                 {
                     type: "divider"
                 },
@@ -220,12 +263,9 @@ export function postModalBlock(trigger: any, initialMessage?: string, channel?: 
 
             ]
         }
-    }, {
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${Config.get('SLACK_TOKEN')}`
-        }
-    }).then(() => ({ statusCode: 200 }));
+    })
+    if(!response.ok) {console.error(`Error opening modal `, JSON.stringify(response))}
+    return {statusCode: 200}
 }
 
 /**
@@ -233,65 +273,64 @@ export function postModalBlock(trigger: any, initialMessage?: string, channel?: 
  *
  * @param userId
  */
-export function listContributions(userId: string): Promise<LambdaResponse> {
-    return getContributions(userId).then((results) => {
-        const response = {
-            text: results.length === 0 ?
-                'You do not have any contributions. Submit one by using the slash-command /ossi new!' :
-                'Here is the listing of your open source contribution submissions',
-            attachments: results.map((item) => {
-                return {
-                    fallback: 'fallback',
-                    color: contributionColor(item),
-                    text: item.text,
-                    fields: contributionFields(item)
-                };
-            })
-        };
-        return {
-            statusCode: 200,
-            body: JSON.stringify(response)
-        };
-    });
+export async function listContributions(userId: string): Promise<LambdaResponse> {
+    const results = await getContributions(userId);
+    const response = {
+        text: results.length === 0 ?
+            'You do not have any contributions. Submit one by using the slash-command /ossi new!' :
+            'Here is the listing of your open source contribution submissions',
+        attachments: results.map((item) => {
+            return {
+                fallback: 'fallback',
+                color: contributionColor(item),
+                text: item.text,
+                fields: contributionFields(item)
+            };
+        })
+    };
+    return {
+        statusCode: 200,
+        body: JSON.stringify(response)
+    };
 }
 
 interface SlackField {
-  title: string,
-  value: string,
-  short: boolean
+    short: boolean
+    title: string,
+    value: string,
 }
 
 /**
  * Fn to generate slack message fields from contribution entry
  */
 export function contributionFields(contribution: Contribution): SlackField[] {
-  return [
-    {
-        title: "Size",
-        value: contribution.size,
-        short: true
-    },
-    {
-        title: "Status",
-        value: contribution.status,
-        short: true
-    },
-    {
-        title: "URL",
-        value: contribution.url || 'No URL available',
-        short: true
-    },
-    {
-        title: "Contribution month",
-        value: contribution.contributionMonth || 'No contribution month available',
-        short: true
-    },
-    {
-        title: "Submitted",
-        value: moment(contribution.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
-        short: true
-    },
-  ];
+    return [
+        {
+            title: "Size",
+            value: contribution.size,
+            short: true
+        },
+        {
+            title: "Status",
+            value: contribution.status,
+            short: true
+        },
+        {
+            title: "URL",
+            value: contribution.url || 'No URL available',
+            short: true
+        },
+        {
+            title: "Contribution month",
+            value: contribution.contributionMonth || 'No contribution month available',
+            short: true
+        },
+        {
+            title: "Submitted",
+            value: moment(contribution.timestamp).tz('Europe/Helsinki').format('D.M.YYYY HH:mm:ss'),
+            short: true
+        },
+    ];
 }
 
 /**
@@ -316,11 +355,11 @@ export function contributionColor(contribution: Contribution): string {
  * Utility fn to make a long slack message
  */
 export function slackMessageFromLines(lines: string[]): string {
-  return lines.join('\n');
+    return lines.join('\n');
 }
 
 export function getHelpMessage(): string {
-    const helpMessage = slackMessageFromLines([
+    return slackMessageFromLines([
         `*${randomEntry(hellos)}*`,
         "",
         "My name is Ossi (a.k.a Ossitron-2000) :robot_face:, and I'm here to record your Open Source Contributions. :gem:",
@@ -348,9 +387,8 @@ export function getHelpMessage(): string {
         "",
         "_Information about the policy_: https://intra.solita.fi/pages/viewpage.action?pageId=76514684",
         "_My source code_: https://github.com/solita/ossi-bot",
-        `_Deployment_: ${Config.get('VERSION')} ${Config.get('ENVIRONMENT')}`
+        `_Deployment_: ${AppConfig.getEnvVar('VERSION')} ${AppConfig.getEnvVar('ENVIRONMENT')}`
     ]);
-    return helpMessage;
 }
 
 const hellos = [

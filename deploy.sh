@@ -41,7 +41,7 @@ fi
 
 echo "Deploying new version to $ENV"
 
-yarn serverless deploy --stage $ENV --version $GIT_HASH
+yarn serverless deploy --stage $ENV
 
 MESSAGE="Deployed new version to ENV=$ENV. Git hash: $GIT_HASH"
 

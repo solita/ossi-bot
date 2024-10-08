@@ -1,20 +1,22 @@
-import {Config, ConfigKeys} from "./shared/config";
 
-import { handleSlashCommand } from './slash-command-handler';
-const auth = require('./shared/slack-auth');
-const { stringify } = require('querystring');
-const interaction = require('./shared/slack-interaction');
+import { handler } from './slash-command-handler';
+import * as auth from '../slack/slack-auth';
+import {stringify} from 'querystring';
+import * as interaction from '../slack/slack-interaction';
+import {AppConfig, AppEnvVarKeys} from "../model/app-config";
 
 jest.spyOn(interaction, 'getHelpMessage');
 
-interaction.postModalBlock = jest.fn(() => ({statusCode: 200}));
-interaction.listContributions= jest.fn(() => ({ statusCode: 200, body: 'Something bogus' }));
+jest.spyOn(interaction, 'openCreateContributionModal').mockResolvedValue({statusCode: 200});
+jest.spyOn(interaction, 'listContributions').mockResolvedValue({statusCode: 200, body: 'Something bogus'});
 
 const mockEnv = {
     'VERSION': 'unittest',
     'ENVIRONMENT': 'unittest'
 } as any;
-Config.get = jest.fn((key: ConfigKeys) => mockEnv[key]);
+AppConfig.getEnvVar = jest.fn((key: AppEnvVarKeys) => mockEnv[key]);
+
+
 
 const testEvent = (body: any) => {
     return {
@@ -33,9 +35,9 @@ describe('slash-command-handler.ts', () => {
     });
 
     it('Should auth and return help for empty message text', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        const response = await handleSlashCommand(testEvent({ text: ''}));
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+        const response = await handler(testEvent({ text: ''}));
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(expect.stringContaining('Ossi'))
         expect(auth.verifySignature)
@@ -47,9 +49,9 @@ describe('slash-command-handler.ts', () => {
     });
 
     it('Should return help for help', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        const response = await handleSlashCommand(testEvent({ text: 'help'}));
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+        const response = await handler(testEvent({ text: 'help'}));
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(expect.stringContaining('Ossi'))
         expect(auth.verifySignature)
@@ -61,22 +63,22 @@ describe('slash-command-handler.ts', () => {
     });
 
     it('Should open modal for new', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        const response = await handleSlashCommand(testEvent({ text: 'new'}));
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+        const response = await handler(testEvent({ text: 'new'}));
         expect(response.statusCode).toEqual(200);
         expect(auth.verifySignature)
             .toBeCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:text=new');
-        expect(interaction.postModalBlock).toHaveBeenCalledTimes(1);
+        expect(interaction.openCreateContributionModal).toHaveBeenCalledTimes(1);
     });
 
     it('Should list for list', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        const response = await handleSlashCommand(testEvent({ text: 'list'}));
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+        const response = await handler(testEvent({ text: 'list'}));
         expect(response.statusCode).toEqual(200);
         expect(auth.verifySignature)
             .toBeCalledWith(
@@ -87,9 +89,9 @@ describe('slash-command-handler.ts', () => {
     });
 
     it('Should auth and return 401 with invalid auth', async () => {
-        auth.verifySignature = jest.fn(() => false);
-        auth.getSecret = jest.fn(() => 'secret');
-        const response = await handleSlashCommand(testEvent({ text: 'new'}));
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(false);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+        const response = await handler(testEvent({ text: 'new'}));
         expect(response.statusCode).toEqual(401);
         expect(auth.verifySignature)
             .toBeCalledWith(

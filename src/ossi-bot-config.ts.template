@@ -1,0 +1,31 @@
+import {CdkEnvironment} from "./lib/cdk/cdk-config";
+
+interface OssiBotConfig {
+    readonly slack: {
+        readonly signingSecretSecretArn: string
+        readonly appAuthTokenSecretArn: string
+        readonly publicChannel: string
+        readonly managementChannel: string
+    }
+}
+
+const ossiBotConfig: Record<CdkEnvironment, OssiBotConfig> = {
+    dev: {
+        slack: {
+            signingSecretSecretArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-123",
+            appAuthTokenSecretArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-456",
+            publicChannel: "#ossi-bot-dev",
+            managementChannel: "#ossi-management"
+        }
+    },
+    prod: {
+        slack: {
+            signingSecretSecretArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-123",
+            appAuthTokenSecretArn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-456",
+            publicChannel: "#open-source",
+            managementChannel: "#ossi-management"
+        }
+    }
+}
+
+export default ossiBotConfig
