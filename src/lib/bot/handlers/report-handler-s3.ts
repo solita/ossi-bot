@@ -56,7 +56,7 @@ export const handler = async (event: MonthlyReportEvent) => {
     console.log(`Saving ${fileName} to S3`);
     const expiresIn = Duration.days(7);
     const expiresDate = moment().add(expiresIn.toSeconds(), 'seconds').format('YYYY-MM-DD HH:mm:ss');
-    const downloadUrl = await saveWithPresignedUrl(AppConfig.getEnvVar('MONTHLY_REPORT_BUCKET'), fileName, xlsxFile, Duration.minutes(5));
+    const downloadUrl = await saveWithPresignedUrl(AppConfig.getEnvVar('MONTHLY_REPORT_BUCKET'), fileName, xlsxFile, expiresIn);
 
     console.log(`Sending report url to ${AppConfig.getEnvVar('MANAGEMENT_CHANNEL_ID')}`);
     return postMessage(
