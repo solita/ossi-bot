@@ -1,7 +1,6 @@
 import {App, DefaultStackSynthesizer} from "aws-cdk-lib";
 import {CommonStackProps} from "../lib/cdk/stack";
 import {CdkConfig} from "../lib/cdk/cdk-config";
-import {addCommonTags} from "../lib/cdk/tags";
 import {StorageStack} from "../lib/cdk/stack/storage-stack";
 import * as Name from "../lib/cdk/name";
 import {BackendStack} from "../lib/cdk/stack/backend-stack";
@@ -27,7 +26,7 @@ const commonStackProps: CommonStackProps = {
     envName: CdkConfig.ENVIRONMENT_NAME,
 }
 
-addCommonTags(app, commonStackProps)
+
 
 
 const storageStack = new StorageStack(app, Name.stack("storage", commonStackProps),commonStackProps)
