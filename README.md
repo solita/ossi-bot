@@ -100,7 +100,7 @@ This means that if you need for some reason ton modify entry directly in dynamoD
 `report-handler-s3.ts` constains a lambda, which generates `.xsls` spreadsheet about contributions and posts spreadsheet to management channel. 
 It is scheduled to run automatically monthly, but it can be invoked also directly if needed via slash command `/ossi-bot report YYYY-MM`.
 
-Due security policy changes, posting files to slack is not possible anymore, so the report is stored to S3 and presigned link is posted to management channel that expires in five days. 
+Due security policy changes, posting files to slack is not possible anymore, so the report is stored to S3 and presigned link is posted to management channel that expires in seven days. 
 
 ## Ideas and Whatnot
 

@@ -71,32 +71,6 @@ export async function postInstantMessage(user: string, message: string, attachme
     }
 }
 
-export async function postFile(channel: string, message: string, fileBuffer: Buffer, filename: string) {
-    console.log(`Sending file to ${channel}`);
-    const client = await getClient();
-
-    const formData = new FormData();
-    formData.append('filename', filename);
-    formData.append('file', fileBuffer, filename);
-
-    try {
-        const response = await client.files.uploadV2({
-            filename: filename,
-            file: fileBuffer,
-            channel_id: channel,
-            initial_comment: message
-        })
-        if(!response.ok) {console.error(`Error sending file `, JSON.stringify(response))}
-
-        console.log(`File sent to ${channel}`, response);
-
-    } catch (error) {
-        console.error(`Error sending file `, error);
-    }
-
-}
-
-
 export async function openCreateContributionModal(trigger: any, initialMessage?: string, channel?: string): Promise<any> {
     const currentDayOfMonth = moment().date();
 

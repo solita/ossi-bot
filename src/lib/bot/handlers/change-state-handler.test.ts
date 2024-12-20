@@ -29,8 +29,7 @@ describe('event-handler.ts', () => {
     it('Should return 401 when authentication fails', async () => {
         jest.spyOn(auth, 'verifySignature').mockReturnValue(false);
         jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
-        // auth.verifySignature = jest.fn(() => false);
-        // auth.getSecret = jest.fn(() => 'secret');
+     ;
         const response = await handler(testEvent({}));
         expect(response.statusCode).toEqual(401);
         expect(auth.verifySignature)
@@ -46,9 +45,7 @@ describe('event-handler.ts', () => {
         jest.spyOn(contribution, 'createNewContribution').mockResolvedValue('foo-12345');
 
 
-        // auth.verifySignature = jest.fn(() => true);
-        // auth.getSecret = jest.fn(() => 'secret');
-        // contribution.createNewContribution = jest.fn(() => Promise.resolve('foo-12345'));
+
         const response = await handler(testEvent({
             type: 'view_submission',
             user: {
@@ -115,22 +112,6 @@ describe('event-handler.ts', () => {
 
         jest.spyOn(contribution, 'updateState').mockReturnValue(Promise.resolve());
 
-        /*
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        contribution.getContribution = jest.fn(() => Promise.resolve({
-            id: 'foo',
-            timestamp: 123456,
-            size: 'SMALL',
-            url: 'https://www.foo.com',
-            contributionMonth: '2019-12',
-            username: 'Mock Mockelson',
-            text: 'My contribution',
-            status: 'PENDING'
-        }));
-        contribution.updateState = jest.fn(() => Promise.resolve());
-
-         */
         const response = await handler(testEvent({
             callback_id: 'foo-123456',
             actions: [
@@ -165,21 +146,6 @@ describe('event-handler.ts', () => {
 
         jest.spyOn(contribution,'updateState').mockReturnValue(Promise.resolve());
 
-        /*
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        contribution.getContribution = jest.fn(() => Promise.resolve({
-            id: 'foo',
-            timestamp: 123456,
-            size: 'SMALL',
-            url: 'https://www.foo.com',
-            contributionMonth: '2019-12',
-            username: 'Mock Mockelson',
-            text: 'My contribution',
-            status: 'PENDING'
-        }));
-        contribution.updateState = jest.fn(() => Promise.resolve());
-        */
         const response = await handler(testEvent({
 
             callback_id: 'foo-123456',

@@ -35,8 +35,6 @@ export const handler = async (event: MonthlyReportEvent) => {
     const acceptedContributions = contributions.filter(contribution => contribution.status === 'ACCEPTED');
     const pendingContributions = contributions.filter(contribution => contribution.status === 'PENDING');
     const declinedContributions = contributions.filter(contribution => contribution.status === 'DECLINED');
-    console.log(`Found ${contributions.length}`);
-
 
     if (acceptedContributions.length === 0) {
         console.log(`No contributions for ${targetMonth}`);

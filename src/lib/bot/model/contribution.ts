@@ -17,12 +17,14 @@ const documentClient = DynamoDBDocumentClient.from(ddb);
 const pagesToContributions = async (pages:  Paginator<QueryCommandOutput>) => {
     const results = [];
     for await (const page of pages) {
-        results.push(...page.Items!!.map(item => item as Contribution))
+        if (page.Items !== undefined) {
+            results.push(...page.Items.map(item => item as Contribution))
+        }
     }
     return Promise.all(results);
 }
 
-export let getContributions = async (id: string): Promise<Contribution[]> => {
+export const getContributions = async (id: string): Promise<Contribution[]> => {
 
     try {
         const pages =  paginateQuery(
