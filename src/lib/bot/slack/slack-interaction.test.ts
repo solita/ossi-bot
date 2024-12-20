@@ -1,7 +1,7 @@
 import {listContributions, getHelpMessage, contributionFields, contributionColor} from "./slack-interaction";
-import { Contribution } from "./model";
-import * as moment from "moment-timezone";
-const dynamo = require('./dynamo');
+import { Contribution } from "../model/model";
+import moment from "moment-timezone";
+import * as contribution from '../model/contribution';
 
 describe('slack-interaction.ts', () => {
 
@@ -31,26 +31,23 @@ describe('slack-interaction.ts', () => {
     describe('listContributions()', () => {
 
         it('Should say, that you do not have contributions if one does not', () => {
-            dynamo.getContributions = jest.fn(() => {
-                return Promise.resolve([] as Contribution[])
-            });
+            jest.spyOn(contribution, 'getContributions').mockResolvedValue([]);
             return expect(listContributions('abc')).resolves.toMatchObject({
                 statusCode: 200,
                 body: expect.stringContaining('You do not have any contributions')
             });
         });
 
-        it('Should list contributions in dynamo', () => {
-            dynamo.getContributions = jest.fn(() => {
-                return Promise.resolve([{
+        it('Should list contributions in contribution', () => {
+            jest.spyOn(contribution, 'getContributions').mockResolvedValue(
+                [{
                     id: 'abc',
                     timestamp: 1,
                     size: 'SMALL',
                     status: 'PENDING',
                     text: 'This is my contribution',
                     username: 'Mock Mockelson'
-                }] as Contribution[])
-            });
+                }])
             return expect(listContributions('abc')).resolves.toMatchObject({
                 statusCode: 200,
                 body: expect.stringContaining('This is my contribution')

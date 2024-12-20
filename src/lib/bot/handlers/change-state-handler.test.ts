@@ -1,18 +1,13 @@
-import {Config, ConfigKeys} from "./shared/config";
 
-const mockEnv = {
-    'PUBLIC_CHANNEL': '#ossi'
-} as any;
-Config.get = jest.fn((key: ConfigKeys) => mockEnv[key]);
+import {handler} from './change-state-handler';
 
-import {changeState} from './change-state-handler';
+import * as auth from '../slack/slack-auth';
+import * as contribution from '../model/contribution';
+import {stringify} from 'querystring';
 
-const auth = require('./shared/slack-auth');
-const dynamo = require('./shared/dynamo');
-const { stringify } = require('querystring');
+import * as interaction from '../slack/slack-interaction';
 
-const interaction = require('./shared/slack-interaction');
-interaction.getHelpMessage = jest.fn();
+jest.spyOn(interaction, 'getHelpMessage').mockReturnValue('Help message');
 
 const testEvent = (body: any) => {
     return {
@@ -32,9 +27,10 @@ describe('event-handler.ts', () => {
     });
 
     it('Should return 401 when authentication fails', async () => {
-        auth.verifySignature = jest.fn(() => false);
-        auth.getSecret = jest.fn(() => 'secret');
-        const response = await changeState(testEvent({}));
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(false);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+     ;
+        const response = await handler(testEvent({}));
         expect(response.statusCode).toEqual(401);
         expect(auth.verifySignature)
             .toBeCalledWith(
@@ -44,10 +40,13 @@ describe('event-handler.ts', () => {
     });
 
     it('Should store contribution', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        dynamo.createNewContribution = jest.fn(() => Promise.resolve('foo-12345'));
-        const response = await changeState(testEvent({
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+        jest.spyOn(contribution, 'createNewContribution').mockResolvedValue('foo-12345');
+
+
+
+        const response = await handler(testEvent({
             type: 'view_submission',
             user: {
                 id: 'foo'
@@ -86,8 +85,8 @@ describe('event-handler.ts', () => {
         }));
 
         expect(response.statusCode).toEqual(200);
-        expect(dynamo.createNewContribution).toHaveBeenCalledTimes(1);
-        expect(dynamo.createNewContribution).toHaveBeenCalledWith({
+        expect(contribution.createNewContribution).toHaveBeenCalledTimes(1);
+        expect(contribution.createNewContribution).toHaveBeenCalledWith({
             id: 'foo',
             text: 'My contribution',
             url: 'https://www.foo.com',
@@ -97,9 +96,10 @@ describe('event-handler.ts', () => {
     });
 
     it('Should update contribution as accepted', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        dynamo.getContribution = jest.fn(() => Promise.resolve({
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+
+        jest.spyOn(contribution, 'getContribution').mockResolvedValue({
             id: 'foo',
             timestamp: 123456,
             size: 'SMALL',
@@ -108,9 +108,11 @@ describe('event-handler.ts', () => {
             username: 'Mock Mockelson',
             text: 'My contribution',
             status: 'PENDING'
-        }));
-        dynamo.updateState = jest.fn(() => Promise.resolve());
-        const response = await changeState(testEvent({
+        })
+
+        jest.spyOn(contribution, 'updateState').mockReturnValue(Promise.resolve());
+
+        const response = await handler(testEvent({
             callback_id: 'foo-123456',
             actions: [
                 { value: 'accepted' }
@@ -119,8 +121,8 @@ describe('event-handler.ts', () => {
         }));
 
         expect(response.statusCode).toEqual(200);
-        expect(dynamo.updateState).toHaveBeenCalledTimes(1);
-        expect(dynamo.updateState).toHaveBeenCalledWith(
+        expect(contribution.updateState).toHaveBeenCalledTimes(1);
+        expect(contribution.updateState).toHaveBeenCalledWith(
             'foo',
             '123456',
             'ACCEPTED'
@@ -128,9 +130,10 @@ describe('event-handler.ts', () => {
     });
 
     it('Should update contribution as declined', async () => {
-        auth.verifySignature = jest.fn(() => true);
-        auth.getSecret = jest.fn(() => 'secret');
-        dynamo.getContribution = jest.fn(() => Promise.resolve({
+        jest.spyOn(auth, 'verifySignature').mockReturnValue(true);
+        jest.spyOn(auth, 'getSecret').mockReturnValue(Promise.resolve("secret"));
+
+        jest.spyOn(contribution, 'getContribution').mockResolvedValue({
             id: 'foo',
             timestamp: 123456,
             size: 'SMALL',
@@ -139,9 +142,12 @@ describe('event-handler.ts', () => {
             username: 'Mock Mockelson',
             text: 'My contribution',
             status: 'PENDING'
-        }));
-        dynamo.updateState = jest.fn(() => Promise.resolve());
-        const response = await changeState(testEvent({
+        })
+
+        jest.spyOn(contribution,'updateState').mockReturnValue(Promise.resolve());
+
+        const response = await handler(testEvent({
+
             callback_id: 'foo-123456',
             actions: [
                 { value: 'declined' }
@@ -149,8 +155,8 @@ describe('event-handler.ts', () => {
         }));
 
         expect(response.statusCode).toEqual(200);
-        expect(dynamo.updateState).toHaveBeenCalledTimes(1);
-        expect(dynamo.updateState).toHaveBeenCalledWith(
+        expect(contribution.updateState).toHaveBeenCalledTimes(1);
+        expect(contribution.updateState).toHaveBeenCalledWith(
             'foo',
             '123456',
             'DECLINED'

@@ -1,24 +1,18 @@
-import {Contribution} from "./shared/model";
-import {handleStream} from './status-changes-handler';
-import {Config, ConfigKeys} from "./shared/config";
+import {Contribution} from "../model/model";
+import {handler} from './status-changes-handler';
+
+import * as interaction from '../slack/slack-interaction';
+import {AppConfig, AppEnvVarKeys} from "../model/app-config";
+
+
+jest.spyOn(interaction, 'postMessage').mockResolvedValue({statusCode: 200});
+jest.spyOn(interaction, 'postInstantMessage').mockResolvedValue({statusCode: 200});
 
 const mockEnv = {
-    'MANAGEMENT_CHANNEL': '#management',
-    'PUBLIC_CHANNEL': '#public'
+    'PUBLIC_CHANNEL_ID': '#public',
+    'MANAGEMENT_CHANNEL_ID': '#management'
 } as any;
-Config.get = jest.fn((key: ConfigKeys) => mockEnv[key]);
-
-const interaction = require('./shared/slack-interaction');
-
-// By default, mocked post message with just succeed
-interaction.postMessage = jest.fn(() => {
-    return Promise.resolve({statusCode: 200 });
-});
-
-interaction.postInstantMessage = jest.fn(() => {
-    return Promise.resolve({statusCode: 200 });
-});
-
+AppConfig.getEnvVar = jest.fn((key: AppEnvVarKeys) => mockEnv[key]);
 
 interface DynamoString {
     S: string
@@ -46,13 +40,13 @@ const createImage = (contribution: Contribution): DynamoImage => ({
     status: {S: contribution.status},
     text: {S: contribution.text},
     username: {S: contribution.username},
-    contributionMonth: {S: contribution.contributionMonth},
-    url: {S: contribution.url}
+    contributionMonth: {S: contribution.contributionMonth!!},
+    url: {S: contribution.url!!}
 });
 
 const createEvent = (type: 'INSERT' | 'UPDATE' | 'REMOVE', newImage: DynamoImage, oldImage?: DynamoImage): any => {
     // Dynamo db sends the data as old image for REMOVE event
-    let actualNewImage = newImage;
+    let actualNewImage: DynamoImage | null = newImage;
     let actualOldImage = oldImage;
 
     if (type === 'REMOVE') {
@@ -107,7 +101,7 @@ describe('status-changes-handler.ts', () => {
             username: 'mockmockelson',
         }));
 
-        return expect(handleStream(event)).resolves.toEqual({
+        return expect(handler(event)).resolves.toEqual({
             status: 'OK',
             message: 'NO_WORK'
         });
@@ -127,7 +121,7 @@ describe('status-changes-handler.ts', () => {
                 username: 'mockmockelson',
             }));
 
-        const response = await handleStream(event);
+        const response = await handler(event);
 
         expect(response.status).toEqual('OK');
         expect(response.message).toEqual('Notified management channel');
@@ -175,7 +169,7 @@ describe('status-changes-handler.ts', () => {
                 username: 'mockmockelson',
             }));
 
-        const response = await handleStream(event);
+        const response = await handler(event);
 
         expect(response.status).toEqual('OK');
         expect(response.message).toEqual('NO_WORK');
@@ -208,7 +202,7 @@ describe('status-changes-handler.ts', () => {
                 username: 'mockmockelson',
             }));
 
-        const response = await handleStream(event);
+        const response = await handler(event);
 
         expect(response.status).toEqual('OK');
         expect(response.message).toEqual('Notified submitter about declination');
@@ -251,7 +245,7 @@ describe('status-changes-handler.ts', () => {
                 username: 'mockmockelson',
             }));
 
-        const response = await handleStream(event);
+        const response = await handler(event);
 
         expect(response.status).toEqual('OK');
         expect(response.message).toEqual('Handled accepted message');
