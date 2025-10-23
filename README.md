@@ -35,7 +35,7 @@ Ossi is a slack bot for registering Open Source Contributions in Solita. Ossi of
    2. Management channel id
    3. Slack Signing and Bot User OAuth Access Token secret arns from Secret Manager
 3. Run `npm run bootstrap -- --profile <your profile> ` but if you use other bootstrap resources, you have to configure them manually in `src/cdk/cdk-config.ts`
-4. Run `npm run cdk deploy "*" --profile <your profile>` to deploy the backend
+4. Run `APP_ENV=<environment> npm run cdk deploy "*" --profile <your profile>` to deploy the backend. Environment: dev/prod
 5. Copy backend endpoint url from AWS Console > API Gateway > <your api> > Settings e.g. `https://frvreimv.execute-api.eu-north-1.amazonaws.com/dev`
 
 ### Finalizing Slack App setup
