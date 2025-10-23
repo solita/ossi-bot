@@ -38,6 +38,9 @@ const ossiBotAppStack = new BackendStack(app, Name.stack("backend", commonStackP
     contributionsTable: storageStack.contributionsTable,
     monthlyReportGSI: storageStack.monthlyReportGSI,
     version: '0.0.1',
+    cloudfrontSigningKeySecret: `/ossi-bot/${commonStackProps.envName}/cloudfront-private-key`,
+    cloudfrontSigningPublicKey: `ossi-bot-${commonStackProps.envName}-cloudfront-public-key`,
+    cloudfrontUrl: storageStack.cloudfrontUrl
 })
 
 ossiBotAppStack.addDependency(storageStack)
