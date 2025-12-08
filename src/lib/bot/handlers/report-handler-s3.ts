@@ -6,9 +6,10 @@ import {AppConfig} from "../model/app-config";
 import {GetObjectCommand, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
 import {loadConfig} from "@smithy/node-config-provider";
 import {NODE_REGION_CONFIG_FILE_OPTIONS, NODE_REGION_CONFIG_OPTIONS} from "@smithy/config-resolver";
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 import {Duration} from "aws-cdk-lib";
 import {postMessage} from "../slack/slack-interaction";
+import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 
 interface MonthlyReportEvent {
     descriptor?: string;
@@ -54,7 +55,18 @@ export const handler = async (event: MonthlyReportEvent) => {
     console.log(`Saving ${fileName} to S3`);
     const expiresIn = Duration.days(7);
     const expiresDate = moment().add(expiresIn.toSeconds(), 'seconds').format('YYYY-MM-DD HH:mm:ss');
-    const downloadUrl = await saveWithPresignedUrl(AppConfig.getEnvVar('MONTHLY_REPORT_BUCKET'), fileName, xlsxFile, expiresIn);
+
+    const saveOptions = {
+        bucket: AppConfig.getEnvVar('MONTHLY_REPORT_BUCKET'),
+        fileName, 
+        xlsxFile, 
+        expiresIn,
+        cloudFrontDomain: AppConfig.getEnvVar('CLOUDFRONT_URL'),
+        keyPairId: AppConfig.getEnvVar('CLOUDFRONT_SIGNING_KEY'),
+        privateKeySecretName: AppConfig.getEnvVar('CLOUDFRONT_SIGNING_SECRET')
+    } satisfies SaveOptions
+    
+    const downloadUrl = await saveWithPresignedUrl(saveOptions);
 
     console.log(`Sending report url to ${AppConfig.getEnvVar('MANAGEMENT_CHANNEL_ID')}`);
     return postMessage(
@@ -96,10 +108,20 @@ const toContributionRowTable = (contribution: Contribution) => [[
     String(contribution.url)
 ]];
 
-const saveWithPresignedUrl = async (bucket: string, fileName: string, xlsxFile: Buffer, expiresIn: Duration): Promise<string> => {
-    const s3Client = new S3Client({
-        region: await loadConfig(NODE_REGION_CONFIG_OPTIONS, NODE_REGION_CONFIG_FILE_OPTIONS)()
-    });
+interface SaveOptions {
+  bucket: string;
+  fileName: string;
+  xlsxFile: Buffer;
+  expiresIn: Duration;
+  cloudFrontDomain: string;   // e.g. d1234abcd.cloudfront.net
+  keyPairId: string;          // ID of the CloudFront public key
+  privateKeySecretName: string; // Name in Secrets Manager containing private key
+}
+
+const saveWithPresignedUrl = async (options: SaveOptions): Promise<string> => {
+    const { bucket, fileName, xlsxFile, expiresIn, cloudFrontDomain, keyPairId, privateKeySecretName } = options;
+    const region = await loadConfig(NODE_REGION_CONFIG_OPTIONS, NODE_REGION_CONFIG_FILE_OPTIONS)();
+    const s3Client = new S3Client({ region });
 
 
     const putCommand = new PutObjectCommand({
@@ -110,13 +132,33 @@ const saveWithPresignedUrl = async (bucket: string, fileName: string, xlsxFile: 
     })
 
     const getCommand = new GetObjectCommand({
-        Bucket: bucket,
-        Key: fileName
+        Bucket: options.bucket,
+        Key: options.fileName
     })
 
     try {
         await s3Client.send(putCommand)
-        return await getSignedUrl(s3Client, getCommand, {expiresIn: expiresIn.toSeconds()});
+        const secretsClient = new SecretsManagerClient({ region });
+        const secretValue = await secretsClient.send(
+            new GetSecretValueCommand({ SecretId: privateKeySecretName })
+        );
+
+        if (!secretValue.SecretString) {
+            throw new Error(`No private key found in secret: ${privateKeySecretName}`);
+        }
+
+        const { privateKey } = JSON.parse(secretValue.SecretString);
+
+        const objectUrl = `https://${cloudFrontDomain}/${encodeURI(fileName)}`;
+
+        const signedUrl = getSignedUrl({
+            url: objectUrl,
+            keyPairId,
+            privateKey,
+            dateLessThan: new Date(Date.now() + expiresIn.toMilliseconds()),
+        });
+
+        return signedUrl;
     } catch (e) {
         console.error(`Error saving file ${fileName} to S3`, e);
         throw e;

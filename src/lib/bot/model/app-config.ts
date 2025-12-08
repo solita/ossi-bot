@@ -50,5 +50,8 @@ export type AppEnvVarKeys =
     'CONTRIBUTIONS_TABLE' | // dynamo db table name in environment
     'MONTHLY_REPORT_GSI' | // dynamo db global secondary index name in environment
     'MONTHLY_REPORT_BUCKET' | // S3 bucket name for monthly reports
-    'MONTHLY_REPORT_LAMBDA_NAME' // Lambda function name for monthly reports
+    'MONTHLY_REPORT_LAMBDA_NAME' | // Lambda function name for monthly reports
+    'CLOUDFRONT_SIGNING_KEY' | // Signing public key id for cloudfront public key pair
+    'CLOUDFRONT_SIGNING_SECRET' | // Signing secret name for cloudfront
+    'CLOUDFRONT_URL' // Cloudfront url
     ;

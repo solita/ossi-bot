@@ -1,6 +1,6 @@
 import {Construct} from "constructs";
 import {LambdaIntegration, RestApi} from "aws-cdk-lib/aws-apigateway";
-import {Stack} from "aws-cdk-lib";
+import {CustomResource, Stack} from "aws-cdk-lib";
 import * as Name from "../name";
 import {CommonStackProps} from "../stack";
 import {createManagedLambdaRole, createNodeJsLambda} from "../lambda";
@@ -14,6 +14,8 @@ import {StartingPosition} from "aws-cdk-lib/aws-lambda";
 import {Rule, Schedule} from "aws-cdk-lib/aws-events";
 import {addLambdaPermission, LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import {Bucket} from "aws-cdk-lib/aws-s3";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider } from "aws-cdk-lib/custom-resources";
 
 const handlers = '../../bot/handlers/';
 
@@ -28,6 +30,9 @@ export interface BackendStackProps extends CommonStackProps {
         readonly publicChannelWebhook: string
         readonly managementChannelWebhook: string
     }
+    readonly cloudfrontSigningKeySecret: string
+    readonly cloudfrontSigningPublicKey: string
+    readonly cloudfrontUrl: string
 }
 
 export class BackendStack extends Stack {
@@ -51,6 +56,38 @@ export class BackendStack extends Stack {
             role: createLambdaRole("change-state-handler", this, props)
         })
         addEnvironmentVariables(changeStateHandlerLambda, props)
+
+
+        //Custom Resource to create CloudFront key pair & store private key in Secrets Manager
+        const keyPairLambda = createNodeJsLambda(this, {
+            ...props,
+            lambdaName: "keypair-handler",
+            entryPath: path.join(__dirname, `${handlers}/keypair-handler.ts`),
+            securityGroups: [],
+            role: createLambdaRole("keypair-handler", this, props)
+        })
+        addEnvironmentVariables(keyPairLambda, props)
+       
+        keyPairLambda.addToRolePolicy(
+            new PolicyStatement({
+            actions: [
+                "cloudfront:CreatePublicKey",
+                "cloudfront:CreateKeyGroup",
+                "secretsmanager:CreateSecret",
+                "secretsmanager:PutSecretValue",
+            ],
+            resources: ["*"],
+            })
+        );
+    
+        const provider = new Provider(this, `KeyPairProvider-${props.envName}`, {
+            onEventHandler: keyPairLambda,
+        });
+    
+        const keyPairResource = new CustomResource(this, `ossi-bot-cloudfront-keypair-resource-${props.envName}`, {
+            serviceToken: provider.serviceToken,
+        });
+
 
         const monthlyReportHandlerLambda = createNodeJsLambda(this, {
             ...props,
@@ -113,7 +150,9 @@ const createLambdaRole = (lambdaName: string, stack: Stack, props: BackendStackP
 
     const slackSigningSecret = Secret.fromSecretCompleteArn(stack, `${lambdaName}-slack-signing-secret`, props.slack.signingSecretSecretArn)
     const slackAppAuthToken = Secret.fromSecretCompleteArn(stack, `${lambdaName}-slack-app-auth-token`, props.slack.appAuthTokenSecretArn)
+    const cloudfrontPrivateKeySecret = Secret.fromSecretNameV2(stack, `${lambdaName}-cloudfront-private-key`, props.cloudfrontSigningKeySecret)
 
+    cloudfrontPrivateKeySecret.grantRead(lambdaRole);
     slackSigningSecret.grantRead(lambdaRole)
     slackAppAuthToken.grantRead(lambdaRole)
 
@@ -130,4 +169,7 @@ const addEnvironmentVariables = (lambda: NodejsFunction, props: BackendStackProp
     lambda.addEnvironment("PUBLIC_CHANNEL_ID", props.slack.publicChannelWebhook)
     lambda.addEnvironment("MANAGEMENT_CHANNEL_ID", props.slack.managementChannelWebhook)
     lambda.addEnvironment("ENVIRONMENT", props.envName)
+    lambda.addEnvironment("CLOUDFRONT_SIGNING_SECRET", props.cloudfrontSigningKeySecret)
+    lambda.addEnvironment("CLOUDFRONT_SIGNING_KEY", props.cloudfrontSigningPublicKey)
+    lambda.addEnvironment("CLOUDFRONT_URL", props.cloudfrontUrl)
 }
