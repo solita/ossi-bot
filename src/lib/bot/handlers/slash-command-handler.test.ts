@@ -41,7 +41,7 @@ describe('slash-command-handler.ts', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(expect.stringContaining('Ossi'))
         expect(auth.verifySignature)
-            .toBeCalledWith(
+            .toHaveBeenCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:text=');
@@ -55,7 +55,7 @@ describe('slash-command-handler.ts', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(expect.stringContaining('Ossi'))
         expect(auth.verifySignature)
-            .toBeCalledWith(
+            .toHaveBeenCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:text=help');
@@ -68,7 +68,7 @@ describe('slash-command-handler.ts', () => {
         const response = await handler(testEvent({ text: 'new'}));
         expect(response.statusCode).toEqual(200);
         expect(auth.verifySignature)
-            .toBeCalledWith(
+            .toHaveBeenCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:text=new');
@@ -81,7 +81,7 @@ describe('slash-command-handler.ts', () => {
         const response = await handler(testEvent({ text: 'list'}));
         expect(response.statusCode).toEqual(200);
         expect(auth.verifySignature)
-            .toBeCalledWith(
+            .toHaveBeenCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:text=list');
@@ -94,7 +94,7 @@ describe('slash-command-handler.ts', () => {
         const response = await handler(testEvent({ text: 'new'}));
         expect(response.statusCode).toEqual(401);
         expect(auth.verifySignature)
-            .toBeCalledWith(
+            .toHaveBeenCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:text=new');
