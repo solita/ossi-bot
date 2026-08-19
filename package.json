@@ -38,7 +38,7 @@
     "@aws-sdk/cloudfront-signer": "^3.1111.0",
     "@aws-sdk/lib-dynamodb": "^3.1113.0",
     "@aws-sdk/s3-request-presigner": "^3.1113.0",
-    "@slack/web-api": "^7.19.0",
+    "@slack/web-api": "^8.0.0",
     "@smithy/config-resolver": "^4.7.2",
     "@smithy/node-config-provider": "^4.6.2",
     "aws-cdk-lib": "^2.265.0",
