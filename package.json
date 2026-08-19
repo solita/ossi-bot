@@ -39,6 +39,8 @@
     "@aws-sdk/lib-dynamodb": "^3.1113.0",
     "@aws-sdk/s3-request-presigner": "^3.1113.0",
     "@slack/web-api": "^7.19.0",
+    "@smithy/config-resolver": "^4.7.2",
+    "@smithy/node-config-provider": "^4.6.2",
     "aws-cdk-lib": "^2.265.0",
     "aws-sdk": "^2.1693.0",
     "axios": "^1.19.0",
