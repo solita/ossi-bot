@@ -17,7 +17,7 @@
     "@types/aws-lambda": "^8.10.162",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^29.5.14",
-    "@types/node": "^20",
+    "@types/node": "^22.20.1",
     "aws-cdk": "^2.1137.0",
     "esbuild": "0.28.2",
     "husky": "^9.1.7",
