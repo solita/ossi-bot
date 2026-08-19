@@ -14,6 +14,7 @@
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "noEmitOnError": true,
+        "isolatedModules": true,
         "strict": true,
         "alwaysStrict": false,
         "inlineSourceMap": true,
