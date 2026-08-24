@@ -20,7 +20,7 @@ export const createNodeJsLambda = (scope: Construct, props: NodeJsLambdaProps): 
     return new NodejsFunction(scope, Name.lambda(props.lambdaName, props), {
         entry: props.entryPath,
         handler: "handler",
-        runtime: Lambda.Runtime.NODEJS_22_X,
+        runtime: Lambda.Runtime.NODEJS_24_X,
         functionName: Name.lambda(props.lambdaName, props),
         memorySize: 1024,
         timeout: Duration.minutes(2),

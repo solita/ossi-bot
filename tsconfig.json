@@ -16,7 +16,6 @@
         "noEmitOnError": true,
         "isolatedModules": true,
         "strict": true,
-        "alwaysStrict": false,
         "inlineSourceMap": true,
         "inlineSources": true,
         "noUnusedLocals": false,
