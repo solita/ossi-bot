@@ -33,7 +33,7 @@ describe('event-handler.ts', () => {
         const response = await handler(testEvent({}));
         expect(response.statusCode).toEqual(401);
         expect(auth.verifySignature)
-            .toBeCalledWith(
+            .toHaveBeenCalledWith(
                 'v0=stub-signature',
                 'secret',
                 'v0:12345:payload=%7B%7D');

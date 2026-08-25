@@ -43,6 +43,6 @@ const ossiBotAppStack = new BackendStack(app, Name.stack("backend", commonStackP
     cloudfrontUrl: storageStack.cloudfrontUrl
 })
 
-ossiBotAppStack.addDependency(storageStack)
+ossiBotAppStack.addStackDependency(storageStack)
 
 

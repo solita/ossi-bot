@@ -79,7 +79,9 @@ export class StorageStack extends Stack {
             sortKey: {name: "timestamp", type: AttributeType.NUMBER},
             stream: StreamViewType.NEW_AND_OLD_IMAGES,
             billingMode: BillingMode.PAY_PER_REQUEST,
-            pointInTimeRecovery: false,
+            pointInTimeRecoverySpecification: {
+                pointInTimeRecoveryEnabled: false
+            },
             removalPolicy: RemovalPolicy.RETAIN,
             deletionProtection: true
         });

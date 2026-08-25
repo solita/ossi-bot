@@ -17,6 +17,7 @@ solita-env.sh
 coverage
 
 out
+*.tsbuildinfo
 
 yarn-error.log
 
